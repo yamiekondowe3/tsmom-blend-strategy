@@ -1,0 +1,7 @@
+candidate,sharpe,cagr,vol,max_dd,calmar,bench_sharpe,bench_cagr,excess_sharpe,beats_bh,trades_per_month,in_market,years
+"B1a  gold H4 medium, long-only",0.922,0.0808,0.0886,-0.167,0.484,0.29,0.022,0.632,True,3.79,0.278,15.72
+"B1b  gold H4 medium, long/short",0.757,0.0875,0.1205,-0.215,0.407,0.29,0.028,0.467,True,7.85,0.512,15.72
+B1c  gold D1 slow (published spec),0.284,0.0275,0.1216,-0.341,0.08,0.286,0.0277,-0.002,False,2.46,0.417,15.72
+"B1d  gold D1 slow, long-only",0.374,0.0321,0.0972,-0.319,0.101,0.286,0.0233,0.088,True,1.52,0.257,15.72
+"B2a  US100 H4 medium, long/short",-0.408,-0.0516,0.114,-0.216,-0.239,0.816,0.0904,-1.224,False,8.6,0.529,2.66
+"B2b  US100 H4 medium, long-only",0.158,0.0105,0.0957,-0.119,0.088,0.816,0.0763,-0.659,False,5.41,0.408,2.66
