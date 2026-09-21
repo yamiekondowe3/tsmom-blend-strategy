@@ -1,0 +1,63 @@
+{
+  "read_utc": "2026-09-21T21:33:04.161018+00:00",
+  "account": {
+    "login": 6289430,
+    "server": "Deriv-Demo",
+    "currency": "USD",
+    "trade_mode": 0,
+    "trade_mode_label": "DEMO"
+  },
+  "provisional": true,
+  "provisional_note": "Costs read from a DEMO account. Demo spreads and swaps can differ from live. Every figure derived from this file must be re-read on the live account before capital is committed.",
+  "symbols": {
+    "US100": {
+      "canonical": "US100",
+      "broker_symbol": "US Tech 100",
+      "description": "US Tech 100",
+      "path": "Stock Indices\\US Tech 100",
+      "digits": 2,
+      "point": 0.01,
+      "contract_size": 1.0,
+      "resolved_from": 0
+    },
+    "US500": {
+      "canonical": "US500",
+      "broker_symbol": "US SP 500",
+      "description": "US 500",
+      "path": "Stock Indices\\US SP 500",
+      "digits": 2,
+      "point": 0.01,
+      "contract_size": 1.0,
+      "resolved_from": 0
+    },
+    "XAUUSD": {
+      "canonical": "XAUUSD",
+      "broker_symbol": "XAUUSD",
+      "description": "Gold vs US Dollar",
+      "path": "Metals\\XAUUSD",
+      "digits": 2,
+      "point": 0.01,
+      "contract_size": 100.0,
+      "resolved_from": 0
+    },
+    "XAGUSD": {
+      "canonical": "XAGUSD",
+      "broker_symbol": "XAGUSD",
+      "description": "Silver vs US Dollar",
+      "path": "Metals\\XAGUSD",
+      "digits": 3,
+      "point": 0.001,
+      "contract_size": 5000.0,
+      "resolved_from": 0
+    }
+  },
+  "server_clock": {
+    "method": "tick time of 'Volatility 75 Index' vs UTC now",
+    "clock_symbol": "Volatility 75 Index",
+    "offset_hours": 0.0,
+    "raw_offset_hours": -0.0006,
+    "server_time_observed": "2026-09-21T21:33:02",
+    "utc_time_observed": "2026-09-21T21:33:04.162016"
+  },
+  "total_symbols_on_account": 722
+}

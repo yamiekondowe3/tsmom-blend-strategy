@@ -1,0 +1,19 @@
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.log
+.env
+
+# Broker price history is bulk data, not source -- regenerate with src/pull_history.py
+data/**/*.parquet
+data/**/*.csv
+
+# ...but these three ARE deliverables and must be tracked. Without these
+# negations the `data/**/*.csv` rule above silently swallows costs.csv.
+!data/costs.csv
+!data/spread_by_session.csv
+!data/bars_per_day.csv
+!data/leg_alignment.csv
+!data/symbol_map.json
+!data/broker_config.json

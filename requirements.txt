@@ -1,0 +1,9 @@
+pandas>=2.2
+numpy>=1.26
+MetaTrader5>=5.0.45
+statsmodels>=0.14
+scipy>=1.13
+pyarrow>=16.0
+matplotlib>=3.9
+pytest>=8.2
+python-dateutil>=2.9
