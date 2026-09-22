@@ -31,7 +31,8 @@ check, a placebo and a look-ahead test — on one instrument, one broker, and on
 | Fast signal | sign of trailing 10-trading-day return (51 H4 bars) |
 | Position | static 50/50 blend of the two, **long-only** |
 | Regime filter | flat when 20-day realised vol is in its trailing 2-year top decile |
-| Sizing | inverse 20-day realised vol, 15% annual vol target, 3× leverage cap |
+| Sizing | inverse 20-day realised vol (close-to-close), 15% annual target, 3× cap |
+| Kill switch | flat when aggregate realised vol exceeds its trailing 95th percentile |
 | Execution | signal read at bar close, position held from the **next** bar |
 
 Lookbacks are the literature's, not values found by searching this data.
@@ -70,6 +71,58 @@ Full evidence: [`reports/book_b.md`](reports/book_b.md).
 3. **The directional filter earns nothing** (0.922 with, 0.917 without). The
    slow signal already encodes direction. Kept because the brief specifies it,
    but it could go.
+
+## Enhancement round: five of six avenues failed
+
+Six independent attempts were made to improve on the specification above. One is
+retained on design grounds with a near-neutral measured effect; the other five
+are rejected. Full detail in [`reports/enhancements.md`](reports/enhancements.md).
+
+| Avenue | Verdict | Effect |
+|---|---|---|
+| Yang-Zhang / downside semi-vol estimators | rejected | both worse than crude close-to-close |
+| Dynamic state tilt (brief Variant 1) | rejected | 0.714 vs 0.922 for the static blend |
+| Speed ensembling across the lookback range | rejected on Sharpe | 0.80–0.87 vs 0.92; better drawdown, worse return |
+| Extra instruments (XAGUSD, US500) | rejected | silver marginal (+0.04), US500 fails |
+| Gold + silver portfolio | rejected | halves Sharpe, 0.913 → 0.488 |
+| Portfolio kill switch (section 6) | **retained** | +0.064 full-sample, but helps in only 2 of 7 windows |
+
+**That five failed is the finding, not a disappointment.** A specification six
+independent attempts cannot improve is more likely to be a real effect than a
+lucky corner of a parameter grid. Deflated Sharpe still clears 0.95
+(**0.986**) against the **cumulative** 246-trial count, not just the original
+grid — searching for improvements is itself multiple testing and is counted as
+such.
+
+Two judgements worth stating plainly:
+
+- **Adding silver would have raised frequency from 0.87 to 1.8 trades/week**,
+  much closer to the brief's target — by halving Sharpe. That is the trade
+  section 1.4 forbids. The answer to too few trades is fewer trades, not worse
+  ones.
+- **The kill switch is tail insurance, not alpha.** Essentially its whole
+  full-sample gain comes from the COVID window; in five of seven windows it
+  costs a little. Note also that the brief's rationale for a *single* kill
+  switch — both books failing on the same vol spike — does not currently apply,
+  because there is only one book. It is kept because it is cheap and the
+  reasoning returns as soon as a second book does.
+
+## Where this sits against the overall goal
+
+| Goal (brief §1.4) | Target | Actual |
+|---|---|---|
+| Portfolio trade frequency | 2–3 / week | **0.87 / week** |
+| Books running | 2 | 1 |
+| Instruments trading | 4 | 1 |
+
+**The frequency shortfall is structural and should not be closed.** The brief
+expected Book A to carry the trade count; Book A has no signal, and every
+legitimate way of replacing that frequency inside the brief's four-instrument
+universe has now been tested and rejected. The honest options are to accept
+~1 trade/week on one validated book, or to widen the instrument universe —
+which is outside this brief's scope. Time-series momentum is documented across
+58 liquid instruments (Moskowitz, Ooi & Pedersen); one instrument is the
+constraint here, not the method.
 
 ### A data defect worth knowing about
 

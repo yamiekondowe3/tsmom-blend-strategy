@@ -1,0 +1,4 @@
+estimator,sharpe,cagr,max_dd,calmar,excess_sharpe,trades_per_week,in_market,turnover_per_year
+close,0.922,0.0808,-0.167,0.484,0.632,0.87,0.278,58.8
+yang_zhang,0.9,0.0737,-0.156,0.472,0.61,0.87,0.278,55.2
+downside,0.863,0.0896,-0.178,0.504,0.573,0.87,0.278,65.5

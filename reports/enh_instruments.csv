@@ -1,0 +1,9 @@
+symbol,direction,years,sharpe,cagr,bench_sharpe,excess_sharpe,beats_bh,trades_per_month
+XAUUSD,long_only,15.72,0.922,0.0808,0.29,0.632,True,3.79
+XAUUSD,both,15.72,0.757,0.0875,0.29,0.467,True,7.85
+XAGUSD,long_only,15.72,0.176,0.0111,0.133,0.043,True,4.03
+XAGUSD,both,15.72,0.091,0.0037,0.133,-0.042,False,8.65
+US100,long_only,2.66,0.158,0.0105,0.816,-0.659,False,5.41
+US100,both,2.66,-0.408,-0.0516,0.816,-1.224,False,8.6
+US500,long_only,2.66,-0.401,-0.0435,0.812,-1.213,False,6.73
+US500,both,2.66,-0.655,-0.0754,0.812,-1.467,False,9.26

@@ -108,14 +108,7 @@ def blend_position(close: pd.Series, slow_bars: int, fast_bars: int,
         ma_s = close.rolling(slow_bars).mean()
         pos = np.sign(ma_f - ma_s).fillna(0.0)
     elif mode == "dynamic":
-        if dynamic_weights is None:
-            raise ValueError("dynamic mode needs walk-forward state weights")
-        state = four_state(slow_sig, fast_sig)
-        pos = pd.Series(
-            [dynamic_weights.get(STATE_NAMES[s], 0.0) if isinstance(dynamic_weights, dict)
-             else dynamic_weights.loc[t, STATE_NAMES[s]]
-             for t, s in zip(close.index, state)],
-            index=close.index)
+        pos = dynamic_state_position(close, slow_bars, fast_bars)
     else:
         raise ValueError(f"unknown signal mode {mode!r}")
 
@@ -128,6 +121,60 @@ def blend_position(close: pd.Series, slow_bars: int, fast_bars: int,
 # --------------------------------------------------------------------------
 # filters
 # --------------------------------------------------------------------------
+
+def vol_estimate(df: pd.DataFrame, window: int, method: str = "close") -> pd.Series:
+    """Trailing volatility, per bar, by one of the brief's section 6 estimators.
+
+    close       close-to-close standard deviation. The crude default the brief
+                asks for, and what the published TSMOM work uses.
+    yang_zhang  Yang-Zhang, which combines overnight, open-to-close and
+                Rogers-Satchell components. It uses the whole bar rather than
+                just its close, so it extracts more information from the same
+                data and is less noisy -- Baltas & Kosowski show a better
+                estimator cuts turnover, because a less jumpy volatility
+                estimate means a less jumpy position size.
+    downside    semi-deviation of negative returns only (Wang & Yan 2021).
+                The argument is that it is downside risk investors actually
+                price, so scaling by it should allocate more accurately than
+                scaling by total variation.
+
+    All three are returned as a per-bar standard deviation, NOT annualised,
+    so they are interchangeable at the call site.
+    """
+    c = df["close"].astype(float)
+    r = c.pct_change()
+
+    if method == "close":
+        return r.rolling(window).std(ddof=1)
+
+    if method == "downside":
+        # Only negative moves contribute. The sqrt(2) puts it back on the same
+        # scale as a two-sided deviation for a symmetric distribution, so the
+        # same vol target means the same thing across estimators.
+        neg = r.where(r < 0, 0.0)
+        return np.sqrt(2.0) * np.sqrt((neg ** 2).rolling(window).mean())
+
+    if method == "yang_zhang":
+        o = df["open"].astype(float)
+        h = df["high"].astype(float)
+        lo = df["low"].astype(float)
+        prev_c = c.shift(1)
+
+        log_ho, log_lo_ = np.log(h / o), np.log(lo / o)
+        log_co = np.log(c / o)
+        log_oc = np.log(o / prev_c)
+
+        sigma_o = (log_oc ** 2).rolling(window).mean()          # overnight gap
+        sigma_c = (log_co ** 2).rolling(window).mean()          # open to close
+        rs = log_ho * (log_ho - log_co) + log_lo_ * (log_lo_ - log_co)
+        sigma_rs = rs.rolling(window).mean()                    # Rogers-Satchell
+
+        k = 0.34 / (1.34 + (window + 1) / (window - 1))
+        var = sigma_o + k * sigma_c + (1.0 - k) * sigma_rs
+        return np.sqrt(var.clip(lower=0.0))
+
+    raise ValueError(f"unknown vol estimator {method!r}")
+
 
 def directional_filter(close: pd.Series, ma_bars: int) -> pd.Series:
     """+1 allows longs only, -1 allows shorts only (brief section 5)."""
@@ -146,6 +193,48 @@ def vol_regime_flat(returns: pd.Series, vol_window: int, lookback_bars: int,
     rv = returns.rolling(vol_window).std(ddof=1)
     thresh = rv.rolling(lookback_bars, min_periods=vol_window * 3).quantile(decile)
     return (rv > thresh).fillna(False)
+
+
+def dynamic_state_position(close: pd.Series, slow_bars: int, fast_bars: int,
+                           min_obs: int = 500) -> pd.Series:
+    """Variant 1 -- state-conditional tilt, estimated WALK-FORWARD ONLY.
+
+    The brief's dynamic-speed variant: instead of a fixed 50/50 blend, weight
+    each of the four states by how that state has actually paid off so far.
+    Goulding, Harvey & Mazzoleni's point is that the two turning states
+    (Correction and Rebound) are where a single slow signal is weakest, so
+    those are the weights worth learning.
+
+    The estimate is expanding and shifted: the weight used at bar t comes from
+    the mean forward return of that state over bars strictly before t. Nothing
+    else would be legitimate -- fitting state weights on the whole sample and
+    then "testing" on it would guarantee a flattering answer, which is exactly
+    the error the brief's section 7 exists to prevent. Until a state has
+    `min_obs` observations its weight is zero rather than a guess.
+    """
+    slow_sig = trailing_sign(close, slow_bars)
+    fast_sig = trailing_sign(close, fast_bars)
+    state = four_state(slow_sig, fast_sig).to_numpy()
+    fwd = close.pct_change().shift(-1).to_numpy()      # return earned by bar t's position
+
+    n = len(close)
+    pos = np.zeros(n)
+    sums = np.zeros(4)
+    counts = np.zeros(4)
+    for i in range(n):
+        s = state[i]
+        if counts[s] >= min_obs:
+            mean_s = sums[s] / counts[s]
+            pos[i] = np.sign(mean_s)
+        # only now fold bar i's realised outcome into the estimate, so the
+        # weight applied at i never saw i's own result
+        if np.isfinite(fwd[i]):
+            sums[s] += fwd[i]
+            counts[s] += 1
+
+    out = pd.Series(pos, index=close.index)
+    out.iloc[:max(slow_bars, fast_bars)] = 0.0
+    return out
 
 
 def _apply_band(w: pd.Series, band: float) -> pd.Series:
@@ -176,7 +265,7 @@ def run(df: pd.DataFrame, costs: dict, *,
         use_vol_regime: bool = True, vol_window: int | None = None,
         vol_target: float | None = 0.15, max_leverage: float = 3.0,
         spread_multiplier: float = 1.0, direction: str = "both",
-        rebalance_band: float = 0.0,
+        rebalance_band: float = 0.0, vol_method: str = "close",
         dynamic_weights=None) -> dict:
     """Run one configuration and return returns, weights and a summary.
 
@@ -219,7 +308,7 @@ def run(df: pd.DataFrame, costs: dict, *,
     # across instruments by design -- the published TSMOM work uses a
     # deliberately simple model and the brief says to resist sophistication.
     if vol_target is not None:
-        rv_ann = ret.rolling(vol_window).std(ddof=1) * np.sqrt(ppy)
+        rv_ann = vol_estimate(df, vol_window, vol_method) * np.sqrt(ppy)
         scale = (vol_target / rv_ann).replace([np.inf, -np.inf], np.nan)
         scale = scale.clip(upper=max_leverage).fillna(0.0)
         pos = pos * scale
