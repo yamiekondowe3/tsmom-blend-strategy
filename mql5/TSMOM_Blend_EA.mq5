@@ -50,6 +50,10 @@ input double  MaxLeverage        = 3.0;
 input double  RegimeDecile       = 0.90;
 input double  KillPercentile     = 0.95;
 input bool    UseKillSwitch      = true;
+// Measured on the UNION grid of both sleeves (5.4042 bars/day), not on either
+// symbol's own calendar: 20 days = 108 bars, 2 years = 2724 bars.
+input int     KillVolWindow      = 108;
+input int     KillLookback       = 2724;
 input bool    UseDirectionalFilt = true;
 input double  SleeveAllocation   = 0.5;   // equal weight
 input double  MinLotChange       = 0.0;   // 0 = use the symbol's lot step
@@ -91,6 +95,20 @@ int OnInit()
    if(g_blocked)
       Print("TSMOM_Blend_EA: NOT trading. Outside Strategy Tester and ",
             "AllowLiveTrading=false. This is the brief's section 2 rule.");
+
+   // Hard block on a REAL account, independent of AllowLiveTrading. Only demo
+   // execution has been authorised (build step 8), and a preset file carrying
+   // AllowLiveTrading=true must not be able to reach live money just because it
+   // was opened on the wrong terminal. Nothing in this project has been
+   // validated on live spreads or live fills.
+   if(!MQLInfoInteger(MQL_TESTER) &&
+      AccountInfoInteger(ACCOUNT_TRADE_MODE)==ACCOUNT_TRADE_MODE_REAL)
+     {
+      g_blocked=true;
+      Alert("TSMOM_Blend_EA: REAL account detected. Refusing to trade. ",
+            "Only demo execution is authorised.");
+      Print("TSMOM_Blend_EA: REAL account -- trading blocked by design.");
+     }
 
    for(int i=0;i<g_count;i++)
       if(!SymbolSelect(g_sleeve[i].symbol,true))
@@ -256,32 +274,66 @@ double SleeveWeight(const Sleeve &s, double &out_slow, double &out_fast,
 double Sign(double x) { return(x>0.0?1.0:(x<0.0?-1.0:0.0)); }
 
 //+------------------------------------------------------------------+
-//| Portfolio kill switch: aggregate realised vol of the combined     |
-//| gross strategy return, above its trailing 95th percentile.        |
+//| Portfolio kill switch (brief section 6).                          |
+//|                                                                   |
+//| Aggregate realised volatility of an equal-weighted basket of the  |
+//| TRADED MARKETS, above its trailing 95th percentile, flattens the  |
+//| book.                                                             |
+//|                                                                   |
+//| Two design points, both settled by measurement in                 |
+//| src/kill_switch_variants.py rather than by convenience:           |
+//|                                                                   |
+//| 1. MARKET returns, not book returns. Defining it on the           |
+//|    portfolio's own strategy returns is closer to the original     |
+//|    implementation, but an EA cannot compute that without either   |
+//|    rebuilding every sleeve's weight history on every bar (O(n^2)) |
+//|    or accumulating two years of its own returns before the        |
+//|    trigger works at all. The two definitions agree on 90% of bars |
+//|    and give full-period Sharpe 1.696 vs 1.682 with identical max  |
+//|    drawdown, so the implementable one costs nothing.              |
+//|                                                                   |
+//| 2. UNION of the two symbols' timestamps, with a market that is    |
+//|    shut contributing a zero return -- exactly what Python does.   |
+//|    The previous version paired the two arrays POSITIONALLY, which |
+//|    compares Saturday bitcoin against Friday gold, because gold    |
+//|    has no weekend bars and bitcoin does.                          |
 //+------------------------------------------------------------------+
 bool KillSwitchActive()
   {
    if(!UseKillSwitch) return(false);
-   int volwin = g_sleeve[0].volwin;
-   int lb     = g_sleeve[0].regimelb;
-   int need   = lb+volwin+5;
+   int volwin = KillVolWindow;
+   int lb     = KillLookback;
+   int need   = lb+volwin+64;
 
-   double c0[],c1[];
-   ArraySetAsSeries(c0,true); ArraySetAsSeries(c1,true);
-   int n0=CopyClose(g_sleeve[0].symbol,PERIOD_H4,1,need,c0);
-   int n1=CopyClose(g_sleeve[1].symbol,PERIOD_H4,1,need,c1);
-   int n=MathMin(n0,n1);
-   if(n<volwin*4) return(false);
+   MqlRates r0[],r1[];
+   ArraySetAsSeries(r0,false); ArraySetAsSeries(r1,false);
+   int n0=CopyRates(g_sleeve[0].symbol,PERIOD_H4,1,need,r0);
+   int n1=CopyRates(g_sleeve[1].symbol,PERIOD_H4,1,need,r1);
+   if(n0<volwin*4 || n1<volwin*4) return(false);
 
+   // Per-symbol chronological returns, each against its OWN previous bar.
+   double v0[],v1[]; datetime t0[],t1[];
+   ArrayResize(v0,n0-1); ArrayResize(t0,n0-1);
+   ArrayResize(v1,n1-1); ArrayResize(t1,n1-1);
+   for(int i=1;i<n0;i++)
+     { v0[i-1]=(r0[i-1].close!=0.0)?r0[i].close/r0[i-1].close-1.0:0.0; t0[i-1]=r0[i].time; }
+   for(int i=1;i<n1;i++)
+     { v1[i-1]=(r1[i-1].close!=0.0)?r1[i].close/r1[i-1].close-1.0:0.0; t1[i-1]=r1[i].time; }
+
+   // Merge onto the union of timestamps; a shut market contributes zero.
    double comb[];
-   ArrayResize(comb,n-1);
-   for(int i=0;i<n-1;i++)
+   ArrayResize(comb,(n0-1)+(n1-1));
+   int a=0,b=0,cn=0;
+   while(a<n0-1 || b<n1-1)
      {
-      double r0=(c0[n-1-i]!=0.0)?c0[n-2-i]/c0[n-1-i]-1.0:0.0;
-      double r1=(c1[n-1-i]!=0.0)?c1[n-2-i]/c1[n-1-i]-1.0:0.0;
-      comb[i]=0.5*(r0+r1);
+      double x=0.0,y=0.0;
+      if(a<n0-1 && (b>=n1-1 || t0[a]<t1[b]))      { x=v0[a]; a++; }
+      else if(b<n1-1 && (a>=n0-1 || t1[b]<t0[a])) { y=v1[b]; b++; }
+      else                                        { x=v0[a]; y=v1[b]; a++; b++; }
+      comb[cn++]=0.5*(x+y);
      }
-   int cn=n-1;
+   ArrayResize(comb,cn);
+   if(cn<volwin*4) return(false);
    double ps[],pss[];
    BuildPrefix(comb,cn,ps,pss);
    double rv_now=StdFromPrefix(ps,pss,cn-volwin,volwin);
@@ -388,6 +440,29 @@ void OnTick()
 
       double target=TargetLots(g_sleeve[i].symbol,w);
       double cur=CurrentLots(g_sleeve[i].symbol);
+
+      // Live decision log. In the tester this would print a quarter of a
+      // million lines, so it is limited to live/demo running, where the
+      // Experts log is the only durable record of why a position was or was
+      // not taken. `want` below min lot is the expected, safe outcome on a
+      // small account -- not an error -- and is logged so it is visible.
+      if(!MQLInfoInteger(MQL_TESTER))
+        {
+         double minlot=SymbolInfoDouble(g_sleeve[i].symbol,SYMBOL_VOLUME_MIN);
+         double px=SymbolInfoDouble(g_sleeve[i].symbol,SYMBOL_ASK);
+         double csz=SymbolInfoDouble(g_sleeve[i].symbol,SYMBOL_TRADE_CONTRACT_SIZE);
+         double want=(px>0&&csz>0)?(w*SleeveAllocation*AccountInfoDouble(ACCOUNT_EQUITY))/(px*csz):0.0;
+         PrintFormat("%s %s | slow %.0f fast %.0f | flat %s | scale %.3f | w %.4f "
+                     "| killed %s | want %.4f lots -> target %.2f (have %.2f, min %.2f)",
+                     TimeToString(bt,TIME_DATE|TIME_MINUTES), g_sleeve[i].symbol,
+                     sl, fs, (flat?"Y":"N"), scale, w, (killed?"Y":"N"),
+                     want, target, cur, minlot);
+         if(want>0.0 && target<=0.0)
+            PrintFormat("   %s: target weight %.4f is below the minimum lot at this "
+                        "equity -- holding nothing. Needs equity >= %.0f.",
+                        g_sleeve[i].symbol, w,
+                        (w>0.0? minlot*csz*px/(w*SleeveAllocation) : 0.0));
+        }
       double step=SymbolInfoDouble(g_sleeve[i].symbol,SYMBOL_VOLUME_STEP);
       double tol=(MinLotChange>0.0)?MinLotChange:step;
       if(MathAbs(target-cur)<tol-1e-12) continue;

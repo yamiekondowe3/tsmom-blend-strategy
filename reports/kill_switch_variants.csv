@@ -1,0 +1,10 @@
+variant,period,sharpe,cagr,max_dd,pct_flat
+A  none,full,1.7,0.1271,-0.133,0.0
+A  none,holdout,1.568,0.1063,-0.133,0.0
+A  none,selection,1.871,0.1609,-0.084,0.0
+B  book returns (current Python),full,1.696,0.1187,-0.128,0.056
+B  book returns (current Python),holdout,1.642,0.1033,-0.128,0.068
+B  book returns (current Python),selection,1.765,0.1436,-0.082,0.041
+C  market basket (EA-implementable),full,1.682,0.124,-0.128,0.047
+C  market basket (EA-implementable),holdout,1.585,0.1059,-0.128,0.049
+C  market basket (EA-implementable),selection,1.806,0.1534,-0.084,0.043

@@ -147,6 +147,42 @@ def main() -> int:
     for k, v in details.items():
         print(k, v)
 
+    # --- kill switch: the EA's flag against Python's market-basket mask ------
+    try:
+        import src.portfolio_b as pbk
+        import src.kill_switch_variants as ksv
+        import src.screen_universe as su_
+        costs_df = pd.read_csv(ho.DATA / "universe_costs.csv")
+        cmap = {r["symbol"]: su_.costs_dict(r) for _, r in costs_df.iterrows()}
+        mkts, idxs = {}, []
+        for s in ksv.SLEEVES:
+            df_, net_, _ = ksv.sleeve(s, cmap[s])
+            mkts[s] = df_["close"].astype(float).pct_change()
+            idxs.append(net_)
+        union = pd.DataFrame({k: v for k, v in zip(ksv.SLEEVES, idxs)}).fillna(0.0)
+        union = union.loc[max(v.index.min() for v in idxs):]
+        mkt = pd.DataFrame(mkts).reindex(union.index).fillna(0.0).mean(axis=1)
+        bpd_c = len(union) / union.index.normalize().nunique()
+        mask = pbk.kill_switch(mkt, max(2, int(round(20 * bpd_c))),
+                               int(round(252 * 2 * bpd_c)))
+        # `killed` is portfolio-level and identical on both sleeves' rows, so
+        # one symbol is taken -- using the whole dump would duplicate every
+        # timestamp and misalign the comparison.
+        e_all = (ea[ea.symbol == ksv.SLEEVES[0]]
+                 .set_index("bar_time").sort_index())
+        e_all = e_all[~e_all.index.duplicated(keep="last")]
+        common = e_all.index.intersection(mask.index)
+        # compare only after the kill switch's own lookback has filled
+        cut = mask.index[min(int(round(252 * 2 * bpd_c)), len(mask) - 1)]
+        common = common[common >= cut]
+        agree = (e_all.loc[common, "killed"].astype(int).to_numpy()
+                 == mask.loc[common].astype(int).to_numpy())
+        print(f"\nkill switch: EA vs Python market basket -- "
+              f"{agree.mean():.4%} agreement over {len(common):,} bars "
+              f"({int((~agree).sum())} disagreements)")
+    except Exception as exc:
+        print(f"\nkill-switch comparison unavailable: {exc}")
+
     steady = res[res.phase == "steady state"]
     bad = steady[steady.mismatches > 0]
     print("\nSTEADY-STATE PARITY:",

@@ -1,0 +1,35 @@
+; Preset for DEMO deployment (build step 8) -- Deriv-Demo 6289430.
+;
+; AllowLiveTrading is TRUE here. This is the only file in the repository where
+; it is, and it exists because demo execution was explicitly authorised. The
+; EA's committed default remains false so that attaching it to a chart by
+; accident cannot place an order.
+;
+; Constants are the ones the parity test verified bar for bar; do not edit them
+; without re-running src/parity.py.
+Sleeve1Symbol=XAUUSD
+Sleeve1SlowBars=308
+Sleeve1FastBars=51
+Sleeve1VolWindow=103
+Sleeve1RegimeLB=2586
+Sleeve1PeriodsYear=1584.1
+Sleeve2Symbol=BTCUSD
+Sleeve2SlowBars=251
+Sleeve2FastBars=42
+Sleeve2VolWindow=84
+Sleeve2RegimeLB=2108
+Sleeve2PeriodsYear=1508.3
+VolTarget=0.15
+MaxLeverage=3.0
+RegimeDecile=0.9
+KillPercentile=0.95
+UseKillSwitch=true
+KillVolWindow=108
+KillLookback=2724
+UseDirectionalFilt=true
+SleeveAllocation=0.5
+MinLotChange=0.0
+DumpParity=false
+ParityFile=tsmom_live_log.csv
+AllowLiveTrading=true
+MagicNumber=20260922

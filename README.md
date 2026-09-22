@@ -9,13 +9,20 @@ Book A, the statistical-arbitrage book, lives in the sibling repo
 [`statarb-pairs-strategy`](https://github.com/yamiekondowe3/statarb-pairs-strategy).
 The full project brief is in [`docs/handoff.md`](docs/handoff.md).
 
-## Status: backtested, validated, and reconciled against the EA. Not yet traded.
+## Status: TRADING ON DEMO (build step 8). Not live.
 
-Build steps 1–7 of 9 are done: the MQL5 EA is written and compiled, and the
-Python/MQL5 parity test passes bar for bar. Live or demo execution (step 8) has
-not been started and needs explicit instruction. Nothing here has placed an
-order — the EA refuses to trade outside the Strategy Tester unless
-`AllowLiveTrading` is set true, and it is committed as false.
+Steps 1–8 of 9 are done. `TSMOM_Blend_EA` is attached to XAUUSD H4 on
+**Deriv-Demo 6289430** and trading both sleeves — see
+[`reports/demo_deployment.md`](reports/demo_deployment.md). The EA **refuses to
+trade on a real account** regardless of settings, and `AllowLiveTrading` is
+`false` in the committed source; the only place it is true is the demo preset.
+Every Python script here remains read-only against MT5.
+
+**Known gap at this account size:** gold's minimum lot is $4,354 of notional, so
+at $10,000 equity only ~40% of gold's signals are tradable at all and its median
+in-market weight (0.782) sits *below* its own lot floor (0.867). BTC trades but
+coarsely (first fill wanted 0.0296 lots, got 0.02). **Topping the demo to
+$25k–$50k would fix both.** Detail in the deployment report.
 
 ## Honesty notice
 
@@ -291,11 +298,11 @@ instruction.
 
 ## Next step
 
-Build step 8: paper/demo execution — and only on explicit instruction.
-Recommended shape given the harness result: run the continuous form only, gold
-at full sleeve weight and BTC probationary at reduced size, and do not re-tune.
-Before that, two things to fix: the EA's kill switch pairs the two symbols' bars
-positionally while Python aligns by timestamp (gold has no weekend bars, BTC
-does), and the terminal needs ~2,900 H4 bars per sleeve cached so the regime
-filter starts correct. The brief flags
+Build step 9: let the demo run a quarter and judge it on execution fidelity —
+fills, swaps, session gaps, rollovers, lot granularity — not on P&L, which over
+a quarter says nothing about a strategy that holds for weeks. Then decide on
+capital against the reservations already on record. Remaining known issue: the terminal needs ~2,900 H4 bars per sleeve cached so the
+regime filter starts correct. (The kill-switch timestamp-alignment bug is
+fixed: it now runs on the union grid of both sleeves and agrees with Python on
+99.89% of bars.) The brief flags
 that as the classic backtest-to-live failure and worth more effort than it looks.
