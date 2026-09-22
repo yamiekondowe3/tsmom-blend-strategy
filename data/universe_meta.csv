@@ -1,0 +1,53 @@
+symbol,group,kind,description,bars,start,end,years
+BTCUSD,Crypto,real,Bitcoin vs US Dollar,13149,2020-09-22,2026-09-22,6.0
+ETHUSD,Crypto,real,Ethereum vs US Dollar,13149,2020-09-22,2026-09-22,6.0
+AUDJPY,Forex Major,real,Australian Dollar vs Japanese Yen,9655,2020-09-22,2026-09-22,6.0
+AUDUSD,Forex Major,real,Australian Dollar vs US Dollar,9656,2020-09-22,2026-09-22,6.0
+EURAUD,Forex Major,real,Euro vs Australian Dollar,9656,2020-09-22,2026-09-22,6.0
+EURCAD,Forex Major,real,Euro vs Canadian Dollar,9656,2020-09-22,2026-09-22,6.0
+EURCHF,Forex Major,real,Euro vs Swiss Franc,9654,2020-09-22,2026-09-22,6.0
+EURGBP,Forex Major,real,Euro vs Great British Pound,9649,2020-09-22,2026-09-22,6.0
+EURJPY,Forex Major,real,Euro vs Japanese Yen,9651,2020-09-22,2026-09-22,6.0
+EURUSD,Forex Major,real,Euro vs US Dollar,9656,2020-09-22,2026-09-22,6.0
+GBPAUD,Forex Major,real,Great British Pound vs Australian Dollar,9656,2020-09-22,2026-09-22,6.0
+GBPJPY,Forex Major,real,Great British Pound vs Japanese Yen,9656,2020-09-22,2026-09-22,6.0
+GBPUSD,Forex Major,real,Great British Pound vs US Dollar,9656,2020-09-22,2026-09-22,6.0
+USDCAD,Forex Major,real,US Dollar vs Canadian Dollar,9656,2020-09-22,2026-09-22,6.0
+USDCHF,Forex Major,real,US Dollar vs Swiss Franc,9656,2020-09-22,2026-09-22,6.0
+USDJPY,Forex Major,real,US Dollar vs Japanese Yen,9656,2020-09-22,2026-09-22,6.0
+AUDCAD,Forex Minor,real,Australian Dollar vs Canadian Dollar,9650,2020-09-22,2026-09-22,6.0
+AUDCHF,Forex Minor,real,Australian Dollar vs Swiss Franc,9648,2020-09-22,2026-09-22,6.0
+AUDNZD,Forex Minor,real,Australian Dollar vs New Zealand Dollar,9649,2020-09-22,2026-09-22,6.0
+CADCHF,Forex Minor,real,Canadian Dollar vs Swiss Franc,9656,2020-09-22,2026-09-22,6.0
+CADJPY,Forex Minor,real,Canadian Dollar vs Japanese Yen,9656,2020-09-22,2026-09-22,6.0
+CHFJPY,Forex Minor,real,Swiss Franc vs Japanese Yen,9629,2020-09-22,2026-09-22,6.0
+EURNOK,Forex Minor,real,Euro vs Norwegian Krone,9655,2020-09-22,2026-09-22,6.0
+EURNZD,Forex Minor,real,Euro vs New Zealand Dollar,9656,2020-09-22,2026-09-22,6.0
+EURPLN,Forex Minor,real,Euro vs Polish Zloty,9656,2020-09-22,2026-09-22,6.0
+EURSEK,Forex Minor,real,Euro vs Swedish Krona,9655,2020-09-22,2026-09-22,6.0
+GBPCAD,Forex Minor,real,Great British Pound vs Canadian Dollar,9656,2020-09-22,2026-09-22,6.0
+GBPCHF,Forex Minor,real,Great British Pound vs Swiss Franc,9656,2020-09-22,2026-09-22,6.0
+GBPNOK,Forex Minor,real,Great British Pound vs Norwegian Krone,9656,2020-09-22,2026-09-22,6.0
+GBPNZD,Forex Minor,real,Great British Pound vs New Zealand Dollar,9652,2020-09-22,2026-09-22,6.0
+GBPSEK,Forex Minor,real,Great British Pound vs Swedish Krona,9656,2020-09-22,2026-09-22,6.0
+NZDCAD,Forex Minor,real,New Zealand Dollar vs Canadian Dollar,9656,2020-09-22,2026-09-22,6.0
+NZDJPY,Forex Minor,real,New Zealand Dollar vs Japanese Yen,9656,2020-09-22,2026-09-22,6.0
+NZDUSD,Forex Minor,real,New Zealand Dollar vs US Dollar,9655,2020-09-22,2026-09-22,6.0
+USDCNH,Forex Minor,real,US Dollar vs Chinese Renminbi,9656,2020-09-22,2026-09-22,6.0
+USDMXN,Forex Minor,real,US Dollar vs Mexican Peso,9656,2020-09-22,2026-09-22,6.0
+USDNOK,Forex Minor,real,US Dollar vs Norwegian Krone,9656,2020-09-22,2026-09-22,6.0
+USDPLN,Forex Minor,real,US Dollar vs Polish Zloty,9656,2020-09-22,2026-09-22,6.0
+USDSEK,Forex Minor,real,US Dollar vs Swedish Krona,9655,2020-09-22,2026-09-22,6.0
+USDZAR,Forex Minor,real,US Dollar vs South African Rand,9656,2020-09-22,2026-09-22,6.0
+XAGEUR,Metals,real,Silver vs Euro,9590,2020-09-22,2026-09-22,6.0
+XAGUSD,Metals,real,Silver vs US Dollar,9579,2020-09-22,2026-09-22,6.0
+XAGUSDmicro,Metals,real,Silver vs US Dollar micro (1 lot=50 units),9579,2020-09-22,2026-09-22,6.0
+XAUEUR,Metals,real,Gold vs Euro,9590,2020-09-22,2026-09-22,6.0
+XAUUSD,Metals,real,Gold vs US Dollar,9590,2020-09-22,2026-09-22,6.0
+XPDUSD,Metals,real,Palladium vs US Dollar,9582,2020-09-22,2026-09-22,6.0
+XPTUSD,Metals,real,Platinum vs US Dollar,9580,2020-09-22,2026-09-22,6.0
+Boom 1000 Index,Crash Boom Indices,synthetic,On average 1 spike occurs in the price series every 1000 ticks,13147,2020-09-22,2026-09-22,6.0
+Crash 1000 Index,Crash Boom Indices,synthetic,On average 1 drop occurs in the price series every 1000 ticks,13150,2020-09-22,2026-09-22,6.0
+Step Index,Step Indices,synthetic,Equal probability of up/down with fixed step size of 0.1,13150,2020-09-22,2026-09-22,6.0
+Volatility 100 Index,Volatility Indices,synthetic,Constant Volatility of 100% with a tick every 2 seconds,13150,2020-09-22,2026-09-22,6.0
+Volatility 75 Index,Volatility Indices,synthetic,Constant Volatility of 75% with a tick every 2 seconds,13150,2020-09-22,2026-09-22,6.0

@@ -1,6 +1,7 @@
 # tsmom-blend-strategy
 
-Book B of the two-book quant project: **time-series momentum on XAUUSD**, using
+Book B of the two-book quant project: **time-series momentum on XAUUSD and
+BTCUSD**, using
 the slow/fast blended signal from Goulding, Harvey & Mazzoleni (JFE 2023)
 rather than a single slow signal. Traded through MT5 on a Deriv account.
 
@@ -18,14 +19,17 @@ Everything in this repo is read-only against MT5.
 
 **A validated backtest is not a track record.** This survives the controls the
 brief demands — walk-forward, deflated Sharpe, cost sensitivity, a plateau
-check, a placebo and a look-ahead test — on one instrument, one broker, and one
-15.7-year sample over most of which gold rose. It has never traded.
+check, a placebo and a look-ahead test — on one broker's data, and it has never
+traded. The gold sleeve rests on a 15.7-year sample over most of which gold
+rose; the bitcoin sleeve on a 15.5-year sample whose early years are thin. The
+two-instrument portfolio does **not** clear the deflated-Sharpe bar under the
+most conservative trial count (see *Instrument expansion*).
 
 ## The strategy
 
 | | |
 |---|---|
-| Instrument | XAUUSD (`XAUUSD` on this broker) |
+| Instruments | XAUUSD + BTCUSD, equal weight (see *Instrument expansion* below) |
 | Timeframe | H4 |
 | Slow signal | sign of trailing 60-trading-day return (308 H4 bars) |
 | Fast signal | sign of trailing 10-trading-day return (51 H4 bars) |
@@ -37,7 +41,7 @@ check, a placebo and a look-ahead test — on one instrument, one broker, and on
 
 Lookbacks are the literature's, not values found by searching this data.
 
-### Results, 15.7 years, net of measured spread and per-night swap
+### Gold sleeve alone — results, 15.7 years, net of measured spread and per-night swap
 
 | | Strategy | Buy-and-hold (vol-matched, swap charged) |
 |---|---|---|
@@ -107,22 +111,60 @@ Two judgements worth stating plainly:
   because there is only one book. It is kept because it is cheap and the
   reasoning returns as soon as a second book does.
 
+## Instrument expansion: gold + bitcoin
+
+The universe was widened beyond the brief's four instruments, on instruction.
+The fixed specification above — unchanged, no parameter re-tuned — was
+screened across **47 real instruments plus 5 synthetic random processes as a
+null control**, then the survivors were validated on the history the screen
+never saw. Full detail: [`reports/instrument_expansion.md`](reports/instrument_expansion.md).
+
+**The strategy does not generalise.** Median excess Sharpe over buy-and-hold
+across the universe is −0.33, and only 19% of instruments beat simply holding
+them; forex fails almost across the board. Four passed the screen (XAUUSD,
+XAUEUR, BTCUSD, ETHUSD). Of those, **two passed the pre-2020 holdout**:
+
+| Survivor | Holdout (unseen by the screen) | Excess Sharpe vs buy-and-hold |
+|---|---|---|
+| XAUUSD | 2011–2020, 9.7y | **+0.53** |
+| BTCUSD | 2011–2020, 9.5y | **+0.53** |
+| ETHUSD | 2015–2020 | −0.69 — rejected |
+| XAUEUR | 9 months only | untestable; gold in euros anyway |
+
+### Book B is now a two-sleeve portfolio: XAUUSD + BTCUSD, equal weight
+
+| | Gold alone | **Gold + BTC** (with kill switch) |
+|---|---|---|
+| Sharpe | 0.93 | **1.70** |
+| CAGR | 8.2% | **11.9%** |
+| Max drawdown | −16.7% | **−12.8%** |
+| Holdout Sharpe | 0.59 | **1.64** |
+| Trades / week | ~0.9 | **2.03** |
+
+2011-03 to 2026-09, net of measured spread and per-night swap. The sleeves are
+almost uncorrelated (0.04); that is where the improvement comes from. It beats
+gold alone in 6 of 7 rolling 2-year windows and still returns Sharpe 1.18 with
+spread and financing **both** doubled.
+
+**What does not pass:** deflated Sharpe is **0.77** (full) and **0.56**
+(holdout) against a cumulative 298 trials — below the 0.95 bar under the most
+conservative accounting. The holdout is the evidence that carries the result;
+the DSR is the reason not to over-trust it. BTC's early history (2011–13) is
+thin, its swap is −20%/yr both ways, and crypto costs were measured on a 7-day
+screening window — re-measure on 30 days before trading.
+
 ## Where this sits against the overall goal
 
 | Goal (brief §1.4) | Target | Actual |
 |---|---|---|
-| Portfolio trade frequency | 2–3 / week | **0.87 / week** |
-| Books running | 2 | 1 |
-| Instruments trading | 4 | 1 |
+| Portfolio trade frequency | 2–3 / week | **2.03 / week** |
+| Books running | 2 | 1 (Book A has no signal) |
+| Instruments trading | 4 | 2 (XAUUSD, BTCUSD) |
 
-**The frequency shortfall is structural and should not be closed.** The brief
-expected Book A to carry the trade count; Book A has no signal, and every
-legitimate way of replacing that frequency inside the brief's four-instrument
-universe has now been tested and rejected. The honest options are to accept
-~1 trade/week on one validated book, or to widen the instrument universe —
-which is outside this brief's scope. Time-series momentum is documented across
-58 liquid instruments (Moskowitz, Ooi & Pedersen); one instrument is the
-constraint here, not the method.
+**The frequency target is now met**, and it is met the only way the brief
+allows: by adding an instrument that independently passed validation, not by
+loosening a filter. It was not met inside the brief's original four-instrument
+universe, which is why the universe was widened.
 
 ### A data defect worth knowing about
 
@@ -141,6 +183,11 @@ src/book_b.py          signal, filters, overlay, costed position backtest
 src/run_book_b.py      config grid, walk-forward, costed CFD benchmark
 src/analyze_book_b.py  ablation, sub-periods, sanity checks, deflated Sharpe
 src/report_book_b.py   writes reports/book_b.md
+src/universe.py        cross-instrument enumeration, pull, tick-measured costs
+src/report_universe.py stage 1: screen the universe -> reports/universe_screen.md
+src/topup_costs.py     retry symbols whose cost read failed
+src/holdout.py         stage 2: validate survivors on pre-screen history
+src/portfolio_gold_btc.py  gold + BTC portfolio -> reports/portfolio_gold_btc.md
 src/pull_history.py    price history + honest coverage report
 src/build_costs.py     contract specs, swaps, session-split spreads from ticks
 common/                shared library (validation.py holds the deflated Sharpe)
@@ -159,6 +206,11 @@ python src/resolve_symbols.py    # data/symbol_map.json, broker_config.json
 python src/pull_history.py       # data/*.csv, reports/data_coverage.md
 python src/build_costs.py        # data/costs.csv, reports/cost_table.md
 python src/report_book_b.py      # reports/book_b.md
+python src/report_universe.py --pull   # universe screen (slow first time: MT5
+python src/topup_costs.py              #   downloads each symbol's history)
+python src/report_universe.py
+python src/holdout.py
+python src/portfolio_gold_btc.py
 ```
 
 ## Safety
@@ -170,6 +222,7 @@ instruction.
 
 ## Next step
 
-Build step 6: the MQL5 EA, then the step 7 parity test — running the same date
+Re-measure BTCUSD costs on the full 30-day tick window. Then build step 6: the
+MQL5 EA for both sleeves, then the step 7 parity test — running the same date
 range through Python and MQL5 and reconciling trade by trade. The brief flags
 that as the classic backtest-to-live failure and worth more effort than it looks.

@@ -17,3 +17,7 @@ data/**/*.csv
 !data/leg_alignment.csv
 !data/symbol_map.json
 !data/broker_config.json
+!data/universe_costs.csv
+!data/universe_meta.csv
+!data/universe_enumerated.csv
+*.log.err
