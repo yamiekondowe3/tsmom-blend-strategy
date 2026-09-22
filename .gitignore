@@ -21,3 +21,5 @@ data/**/*.csv
 !data/universe_meta.csv
 !data/universe_enumerated.csv
 *.log.err
+# harness parquet cache: regenerate with src/harness_test.py
+data/harness_cache/

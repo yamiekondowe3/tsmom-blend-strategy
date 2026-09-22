@@ -184,6 +184,44 @@ economics on the broker's own spreads, swaps and lot rounding: 100,000 →
 
 Full detail: [`reports/parity.md`](reports/parity.md).
 
+## Independent harness validation — the strategy has a hard limit
+
+Book B was run through the separate validation harness in `../harness`, written
+for a different project. Full detail: [`reports/harness_validation.md`](reports/harness_validation.md).
+
+**It fails, and the failure is informative.** The harness tests discrete,
+stop-managed trades at fixed risk; Book B holds a continuous vol-sized exposure.
+Against random entries with the same trade count, exits and costs, gold's entry
+timing scores **z = +0.42** (needs 2.58) and BTC's **z = −2.94**. Across seven
+markets it was not built on, 3 of 7 positive, median E[R] −0.013.
+
+The same question asked *inside* the deployed framework — same exposure profile,
+shuffled timing, 300 runs — comes back the other way, on every sleeve and period:
+
+| Sleeve | Period | Strategy | Shuffled timing | z |
+|---|---|---|---|---|
+| XAUUSD | holdout | 0.754 | 0.144 ± 0.264 | **+2.31** |
+| BTCUSD | holdout | 2.596 | 0.897 ± 0.342 | **+4.96** |
+
+Both are true, and together they say something sharper than either alone:
+
+> **The edge is in exposure management — when to be in the market and at what
+> size — not in entry timing. Converted into a stop-managed system, it stops
+> working.**
+
+Consequences: do **not** deploy this as a stop/target system (the EA already
+implements the continuous form); treat **BTC as probationary** (it fails the
+independent gates on unseen data and already missed the deflated-Sharpe bar);
+and **do not optimise further** — 298+ trials are already counted and more
+searching makes the statistics worse, not better.
+
+A costing error surfaced too: a constant $2.42 BTC spread is **50% of BTC's
+2011 price**. Corrected to proportional, BTC's harness result improves from
+−1.65 to −0.07 (still failing) and its deployed holdout Sharpe from 1.76 to
+2.25. **The headline numbers in this README keep the over-conservative constant
+spread**, so no result rests on a cost assumption changed after seeing an
+unfavourable outcome.
+
 ## Where this sits against the overall goal
 
 | Goal (brief §1.4) | Target | Actual |
@@ -253,8 +291,10 @@ instruction.
 
 ## Next step
 
-Build step 8: paper/demo execution — and only on explicit instruction. Before
-that, two things to fix: the EA's kill switch pairs the two symbols' bars
+Build step 8: paper/demo execution — and only on explicit instruction.
+Recommended shape given the harness result: run the continuous form only, gold
+at full sleeve weight and BTC probationary at reduced size, and do not re-tune.
+Before that, two things to fix: the EA's kill switch pairs the two symbols' bars
 positionally while Python aligns by timestamp (gold has no weekend bars, BTC
 does), and the terminal needs ~2,900 H4 bars per sleeve cached so the regime
 filter starts correct. The brief flags
