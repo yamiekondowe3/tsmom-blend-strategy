@@ -1,5 +1,5 @@
 book,overlay,sharpe,cagr,max_dd,holdout_sharpe,pct_time_flat
-gold alone,none,0.925,0.0816,-0.167,0.591,0.0
-gold alone,kill switch,1.052,0.087,-0.138,0.731,0.053
-gold + BTC,none,1.7,0.1271,-0.133,1.567,0.0
-gold + BTC,kill switch,1.696,0.1187,-0.128,1.642,0.056
+gold alone,none,0.926,0.0817,-0.167,0.592,0.0
+gold alone,kill switch,1.054,0.0871,-0.137,0.732,0.053
+gold + BTC,none,1.701,0.1272,-0.133,1.568,0.0
+gold + BTC,kill switch,1.697,0.1188,-0.128,1.642,0.056

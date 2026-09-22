@@ -29,7 +29,72 @@ to zero and it holds nothing. That is the specification working, not a failure.
 BTC is in **Bull** and opened **0.02 lots at 86,435.55**, $1,729 notional,
 17.3% of equity.
 
-## The thing to fix first: lot granularity at $10,000
+## Can this run on a $50 account? No.
+
+Asked directly, and the answer is no — because of lot granularity, not the
+signal. On $50 the strategy wants about **$39** of gold exposure. The smallest
+position the broker sells is **$437** (XAUUSDmicro), roughly **11× too big**.
+
+Taking it anyway would mean fixed on/off exposure at ~8.7× leverage with the
+inverse-vol sizing gone, which is precisely where the independent harness
+located the edge. Historically that variant is not wiped out (worst
+peak-to-trough −$28 of $50) but it runs a **56% drawdown** against the
+validated −12.8%. It is a different, unvalidated system.
+
+**The EA handles this correctly and automatically.** `TargetLots()` floors to
+the lot step and returns zero below the minimum, so on a $50 account it holds
+nothing and says why, at startup and on every bar:
+
+```
+WARNING XAUUSDmicro: the smallest position is 17.5x what a weight of 1.0 asks
+for. This sleeve cannot be sized at this equity and will hold nothing.
+```
+
+### Minimum equity
+
+| Configuration | Bare minimum | With sane granularity |
+|---|---|---|
+| Gold only (XAUUSDmicro) | $635 | **$2,795** |
+| Both sleeves (micro gold + BTC) | $4,144 | **$15,869** |
+| Both sleeves, standard XAUUSD | $12,706 | $55,893 |
+
+"Bare minimum" means the 10th-percentile in-market weight is representable at
+all. "Sane granularity" means about five lot steps at the median weight, so
+sizing is not effectively binary. Below ~$2,800 only the gold sleeve can
+participate, and coarsely.
+
+## Solved: gold now executes on the micro contract
+
+The gold sleeve's **signal** is still computed on XAUUSD — 24,900 H4 bars back
+to 2011, needed for a 308-bar slow signal and a 2,586-bar regime lookback — but
+the **order** is placed on **XAUUSDmicro**, whose own history only starts
+2025-06-22 and could never support the signal.
+
+Measured over the same 30-day tick window as the other traded instruments, the
+micro contract costs the **same**:
+
+| | Median spread | p95 spread | Swap long %/yr | Min position |
+|---|---|---|---|---|
+| XAUUSD | 0.150 | 0.280 | −3.7601 | $4,371 |
+| XAUUSDmicro | **0.150** | **0.280** | −3.7614 | **$437** |
+
+(An earlier single live snapshot showed 0.27 for the micro contract; over 30
+days that turns out to be a momentary wide quote, not its typical spread.)
+
+So this is a tenfold improvement in granularity at no cost. Confirmed live at
+startup:
+
+```
+sleeve 1: signal XAUUSD -> exec XAUUSDmicro | min position 436.53 USD
+          = smallest tradable weight 0.087 at equity 9994.77
+```
+
+Gold's smallest tradable weight falls from **0.867 to 0.087** against a median
+in-market weight of 0.782 — from *below* its own floor to roughly nine lot
+steps of headroom. The backtest is unchanged by this (full-period portfolio
+Sharpe 1.701 vs 1.700), because the costs are the same.
+
+## The original problem, kept for the record: lot granularity at $10,000
 
 This is the one material gap between the backtest and this account, and it is
 about account size, not the strategy.

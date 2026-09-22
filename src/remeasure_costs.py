@@ -22,7 +22,11 @@ sys.path.insert(0, str(REPO))
 
 import src.universe as un  # noqa: E402
 
-TRADED = ["XAUUSD", "BTCUSD"]
+# XAUUSDmicro is included because it is the EXECUTION vehicle for the gold
+# sleeve on small accounts: same price and same per-ounce financing as XAUUSD,
+# a tenth of the minimum position, and a wider spread that has to be charged
+# rather than assumed away.
+TRADED = ["XAUUSD", "BTCUSD", "XAUUSDmicro"]
 TICK_DAYS = 30
 
 
@@ -37,13 +41,22 @@ def main() -> int:
         return 1
     fresh = fresh.assign(spread_grade=f"traded ({TICK_DAYS}d)")
 
-    print("\n           typical spread      worst (p95)      swap long %/yr")
+    print("\n              typical spread        worst (p95)        swap long %/yr")
     for s in TRADED:
-        b = before.loc[s]
-        a = fresh[fresh.symbol == s].iloc[0]
-        print(f"{s:<8} {b['typical_spread_price']:>8} -> {a['typical_spread_price']:<10.5f}"
-              f" {b['worst_spread_price']:>8} -> {a['worst_spread_price']:<10.5f}"
-              f" {b['swap_long_annual_pct']:>8} -> {a['swap_long_annual_pct']}")
+        row = fresh[fresh.symbol == s]
+        if row.empty:
+            print(f"{s:<12} no tick data returned -- unchanged")
+            continue
+        a = row.iloc[0]
+        if s in before.index:
+            b = before.loc[s]
+            print(f"{s:<12} {b['typical_spread_price']:>8} -> {a['typical_spread_price']:<12.5f}"
+                  f" {b['worst_spread_price']:>8} -> {a['worst_spread_price']:<12.5f}"
+                  f" {b['swap_long_annual_pct']:>8} -> {a['swap_long_annual_pct']}")
+        else:
+            print(f"{s:<12} {'(new)':>8} -> {a['typical_spread_price']:<12.5f}"
+                  f" {'(new)':>8} -> {a['worst_spread_price']:<12.5f}"
+                  f" {'(new)':>8} -> {a['swap_long_annual_pct']}")
 
     merged = (pd.concat([costs[~costs.symbol.isin(TRADED)], fresh], ignore_index=True)
                 .sort_values("symbol"))

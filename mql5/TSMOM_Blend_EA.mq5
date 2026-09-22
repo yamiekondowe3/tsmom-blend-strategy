@@ -31,7 +31,19 @@
 #include <Trade\Trade.mqh>
 
 //--- per-sleeve configuration -------------------------------------------------
+// SIGNAL symbol vs EXECUTION symbol. Leave an ExecSymbol empty to trade the
+// same instrument the signal is read from (the original behaviour).
+//
+// They are separated because XAUUSD's minimum position is 0.01 lots = 100 oz =
+// about $4,370 of notional, which a small account cannot size sensibly: at
+// $10,000 the strategy's median in-market gold weight (0.782) sits BELOW its own
+// lot floor (0.867), so roughly 60% of gold's signals cannot be traded at all.
+// XAUUSDmicro is the same price and the same per-ounce financing with a tenth
+// the minimum ($437), but its history only starts 2025-06-22 -- far too short
+// for a 308-bar slow signal and a 2,586-bar regime lookback. So the signal keeps
+// coming from XAUUSD and only the order goes to the micro contract.
 input string  Sleeve1Symbol      = "XAUUSD";
+input string  Sleeve1ExecSymbol  = "";    // e.g. "XAUUSDmicro"; empty = Sleeve1Symbol
 input int     Sleeve1SlowBars    = 308;   // 60 trading days at 5.1306 bars/day
 input int     Sleeve1FastBars    = 51;    // 10 trading days
 input int     Sleeve1VolWindow   = 103;   // 20 trading days
@@ -39,6 +51,7 @@ input int     Sleeve1RegimeLB    = 2586;  // 2 years
 input double  Sleeve1PeriodsYear = 1584.1;
 
 input string  Sleeve2Symbol      = "BTCUSD";
+input string  Sleeve2ExecSymbol  = "";    // empty = Sleeve2Symbol
 input int     Sleeve2SlowBars    = 251;   // 60 trading days at 4.1834 bars/day
 input int     Sleeve2FastBars    = 42;    // 10 trading days
 input int     Sleeve2VolWindow   = 84;    // 20 trading days
@@ -66,7 +79,8 @@ CTrade  trade;
 
 struct Sleeve
   {
-   string            symbol;
+   string            symbol;        // where the SIGNAL is read from
+   string            exec;          // where the ORDER is placed (may be the same)
    int               slow, fast, volwin, regimelb;
    double            ppy;
    datetime          last_bar;
@@ -83,11 +97,13 @@ int OnInit()
    g_sleeve[0].fast=Sleeve1FastBars; g_sleeve[0].volwin=Sleeve1VolWindow;
    g_sleeve[0].regimelb=Sleeve1RegimeLB; g_sleeve[0].ppy=Sleeve1PeriodsYear;
    g_sleeve[0].last_bar=0;
+   g_sleeve[0].exec=(Sleeve1ExecSymbol=="")?Sleeve1Symbol:Sleeve1ExecSymbol;
 
    g_sleeve[1].symbol=Sleeve2Symbol; g_sleeve[1].slow=Sleeve2SlowBars;
    g_sleeve[1].fast=Sleeve2FastBars; g_sleeve[1].volwin=Sleeve2VolWindow;
    g_sleeve[1].regimelb=Sleeve2RegimeLB; g_sleeve[1].ppy=Sleeve2PeriodsYear;
    g_sleeve[1].last_bar=0;
+   g_sleeve[1].exec=(Sleeve2ExecSymbol=="")?Sleeve2Symbol:Sleeve2ExecSymbol;
 
    // Refuse to run live/demo before build step 8. Being attached to a chart by
    // accident must not place an order.
@@ -111,10 +127,39 @@ int OnInit()
      }
 
    for(int i=0;i<g_count;i++)
+     {
       if(!SymbolSelect(g_sleeve[i].symbol,true))
-        { Print("cannot select ",g_sleeve[i].symbol); return(INIT_FAILED); }
+        { Print("cannot select signal symbol ",g_sleeve[i].symbol); return(INIT_FAILED); }
+      if(!SymbolSelect(g_sleeve[i].exec,true))
+        { Print("cannot select exec symbol ",g_sleeve[i].exec); return(INIT_FAILED); }
+     }
 
    trade.SetExpertMagicNumber(MagicNumber);
+
+   // State the capital each sleeve needs, so a too-small account is reported at
+   // startup rather than inferred from the EA silently never trading. The
+   // smallest position a broker sells is a hard floor: below it the correct
+   // behaviour is to hold nothing, which is what TargetLots() does.
+   double eq=AccountInfoDouble(ACCOUNT_EQUITY);
+   for(int i=0;i<g_count;i++)
+     {
+      double px =SymbolInfoDouble(g_sleeve[i].exec,SYMBOL_ASK);
+      double cs =SymbolInfoDouble(g_sleeve[i].exec,SYMBOL_TRADE_CONTRACT_SIZE);
+      double ml =SymbolInfoDouble(g_sleeve[i].exec,SYMBOL_VOLUME_MIN);
+      if(px<=0.0 || cs<=0.0) continue;
+      double minnot=ml*cs*px;
+      double min_w =(SleeveAllocation*eq>0.0)?minnot/(SleeveAllocation*eq):0.0;
+      PrintFormat("sleeve %d: signal %s -> exec %s | min position %.2f %s "
+                  "= smallest tradable weight %.3f at equity %.2f",
+                  i+1, g_sleeve[i].symbol, g_sleeve[i].exec, minnot,
+                  AccountInfoString(ACCOUNT_CURRENCY), min_w, eq);
+      if(min_w>1.0)
+         PrintFormat("   WARNING %s: the smallest position is %.1fx what a weight "
+                     "of 1.0 asks for. This sleeve cannot be sized at this equity "
+                     "and will hold nothing. Needs about %.0f for typical signals.",
+                     g_sleeve[i].exec, min_w, minnot/(SleeveAllocation*0.78));
+     }
+
    if(DumpParity) ParityHeader();
    return(INIT_SUCCEEDED);
   }
@@ -438,8 +483,11 @@ void OnTick()
 
       if(g_blocked) continue;
 
-      double target=TargetLots(g_sleeve[i].symbol,w);
-      double cur=CurrentLots(g_sleeve[i].symbol);
+      // Sizing and orders use the EXEC symbol; everything above this line used
+      // the signal symbol.
+      string ex=g_sleeve[i].exec;
+      double target=TargetLots(ex,w);
+      double cur=CurrentLots(ex);
 
       // Live decision log. In the tester this would print a quarter of a
       // million lines, so it is limited to live/demo running, where the
@@ -448,27 +496,29 @@ void OnTick()
       // small account -- not an error -- and is logged so it is visible.
       if(!MQLInfoInteger(MQL_TESTER))
         {
-         double minlot=SymbolInfoDouble(g_sleeve[i].symbol,SYMBOL_VOLUME_MIN);
-         double px=SymbolInfoDouble(g_sleeve[i].symbol,SYMBOL_ASK);
-         double csz=SymbolInfoDouble(g_sleeve[i].symbol,SYMBOL_TRADE_CONTRACT_SIZE);
+         double minlot=SymbolInfoDouble(ex,SYMBOL_VOLUME_MIN);
+         double px=SymbolInfoDouble(ex,SYMBOL_ASK);
+         double csz=SymbolInfoDouble(ex,SYMBOL_TRADE_CONTRACT_SIZE);
          double want=(px>0&&csz>0)?(w*SleeveAllocation*AccountInfoDouble(ACCOUNT_EQUITY))/(px*csz):0.0;
+         string tag=(ex==g_sleeve[i].symbol)?g_sleeve[i].symbol
+                                            :(g_sleeve[i].symbol+"->"+ex);
          PrintFormat("%s %s | slow %.0f fast %.0f | flat %s | scale %.3f | w %.4f "
                      "| killed %s | want %.4f lots -> target %.2f (have %.2f, min %.2f)",
-                     TimeToString(bt,TIME_DATE|TIME_MINUTES), g_sleeve[i].symbol,
+                     TimeToString(bt,TIME_DATE|TIME_MINUTES), tag,
                      sl, fs, (flat?"Y":"N"), scale, w, (killed?"Y":"N"),
                      want, target, cur, minlot);
          if(want>0.0 && target<=0.0)
             PrintFormat("   %s: target weight %.4f is below the minimum lot at this "
                         "equity -- holding nothing. Needs equity >= %.0f.",
-                        g_sleeve[i].symbol, w,
+                        ex, w,
                         (w>0.0? minlot*csz*px/(w*SleeveAllocation) : 0.0));
         }
-      double step=SymbolInfoDouble(g_sleeve[i].symbol,SYMBOL_VOLUME_STEP);
+      double step=SymbolInfoDouble(ex,SYMBOL_VOLUME_STEP);
       double tol=(MinLotChange>0.0)?MinLotChange:step;
       if(MathAbs(target-cur)<tol-1e-12) continue;
 
-      if(target>cur)       trade.Buy(target-cur,g_sleeve[i].symbol);
-      else if(target<cur)  ReduceLong(g_sleeve[i].symbol,cur-target);
+      if(target>cur)       trade.Buy(target-cur,ex);
+      else if(target<cur)  ReduceLong(ex,cur-target);
      }
   }
 

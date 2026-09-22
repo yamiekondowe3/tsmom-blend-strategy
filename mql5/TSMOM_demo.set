@@ -8,12 +8,21 @@
 ; Constants are the ones the parity test verified bar for bar; do not edit them
 ; without re-running src/parity.py.
 Sleeve1Symbol=XAUUSD
+; Gold's SIGNAL comes from XAUUSD (24,900 H4 bars back to 2011) but the ORDER
+; goes to XAUUSDmicro: same price, same per-ounce swap, and a 30-day measured
+; median spread of 0.150 -- identical to the standard contract -- with a tenth
+; the minimum position ($437 instead of $4,371). Without this, gold's median
+; in-market weight (0.782) sits below its own lot floor (0.867) at $10k and
+; roughly 60% of its signals cannot be traded at all.
+Sleeve1ExecSymbol=XAUUSDmicro
 Sleeve1SlowBars=308
 Sleeve1FastBars=51
 Sleeve1VolWindow=103
 Sleeve1RegimeLB=2586
 Sleeve1PeriodsYear=1584.1
 Sleeve2Symbol=BTCUSD
+; No micro contract exists for BTC; signal and execution are the same symbol.
+Sleeve2ExecSymbol=BTCUSD
 Sleeve2SlowBars=251
 Sleeve2FastBars=42
 Sleeve2VolWindow=84

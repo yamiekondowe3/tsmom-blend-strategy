@@ -18,11 +18,25 @@ trade on a real account** regardless of settings, and `AllowLiveTrading` is
 `false` in the committed source; the only place it is true is the demo preset.
 Every Python script here remains read-only against MT5.
 
-**Known gap at this account size:** gold's minimum lot is $4,354 of notional, so
-at $10,000 equity only ~40% of gold's signals are tradable at all and its median
-in-market weight (0.782) sits *below* its own lot floor (0.867). BTC trades but
-coarsely (first fill wanted 0.0296 lots, got 0.02). **Topping the demo to
-$25k–$50k would fix both.** Detail in the deployment report.
+**Gold now executes on XAUUSDmicro** — signal still computed on XAUUSD (which
+has the 15 years of history the lookbacks need), order placed on the micro
+contract, which has a tenth the minimum position at an identical measured
+spread (0.150 median, 0.280 p95) and swap. Gold's smallest tradable weight
+falls from 0.867 to **0.087** against a 0.782 median, so it no longer misses
+most of its signals at $10k. The backtest is unchanged (Sharpe 1.701 vs 1.700).
+
+**Minimum account size — a $50 account cannot trade this.** The smallest gold
+position is $437 against the ~$39 of exposure the strategy wants there, about
+11× too big; the EA holds nothing and logs the requirement rather than taking
+an 8.7×-leverage position.
+
+| Configuration | Bare minimum | With sane granularity |
+|---|---|---|
+| Gold only (micro) | $635 | **$2,795** |
+| Both sleeves (micro gold + BTC) | $4,144 | **$15,869** |
+| Both sleeves, standard XAUUSD | $12,706 | $55,893 |
+
+Detail in [`reports/demo_deployment.md`](reports/demo_deployment.md).
 
 ## Honesty notice
 
