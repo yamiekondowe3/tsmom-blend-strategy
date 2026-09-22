@@ -45,11 +45,17 @@ from src.deploy_config import DEPLOY_VOL_TARGET, DEPLOY_MAX_LEVERAGE  # noqa: E4
 VOL_TARGET, MAX_LEV, REGIME_DECILE = DEPLOY_VOL_TARGET, DEPLOY_MAX_LEVERAGE, 0.90
 
 
-def python_state(symbol: str) -> pd.DataFrame:
-    """Reproduce the EA's per-bar state from the Python implementation."""
+def python_state(symbol: str, df: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Reproduce the EA's per-bar state from the Python implementation.
+
+    `df` overrides the on-disk history; the live watcher passes bars fresh from
+    the terminal so the demo's decisions can be checked as they are made.
+    """
     s = SPEC[symbol]
-    df = pd.read_csv(ho.DEEP_DIR / f"{symbol}_H4.csv", parse_dates=["timestamp"])
-    df = df.set_index("timestamp").sort_index()
+    if df is None:
+        df = pd.read_csv(ho.DEEP_DIR / f"{symbol}_H4.csv", parse_dates=["timestamp"])
+        df = df.set_index("timestamp")
+    df = df.sort_index()
     df = df[~df.index.duplicated(keep="last")]
     close = df["close"].astype(float)
     ret = close.pct_change().fillna(0.0)

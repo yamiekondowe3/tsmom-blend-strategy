@@ -23,3 +23,4 @@ data/**/*.csv
 *.log.err
 # harness parquet cache: regenerate with src/harness_test.py
 data/harness_cache/
+reports/demo_watch_state.json
