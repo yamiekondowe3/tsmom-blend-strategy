@@ -9,11 +9,13 @@ Book A, the statistical-arbitrage book, lives in the sibling repo
 [`statarb-pairs-strategy`](https://github.com/yamiekondowe3/statarb-pairs-strategy).
 The full project brief is in [`docs/handoff.md`](docs/handoff.md).
 
-## Status: backtested and validated. Not yet traded.
+## Status: backtested, validated, and reconciled against the EA. Not yet traded.
 
-Build steps 1–4 of 9 are done. The MQL5 EA (step 6), the Python/MQL5 parity
-test (step 7) and any live or demo execution (step 8) have not been started.
-Everything in this repo is read-only against MT5.
+Build steps 1–7 of 9 are done: the MQL5 EA is written and compiled, and the
+Python/MQL5 parity test passes bar for bar. Live or demo execution (step 8) has
+not been started and needs explicit instruction. Nothing here has placed an
+order — the EA refuses to trade outside the Strategy Tester unless
+`AllowLiveTrading` is set true, and it is committed as false.
 
 ## Honesty notice
 
@@ -31,8 +33,8 @@ most conservative trial count (see *Instrument expansion*).
 |---|---|
 | Instruments | XAUUSD + BTCUSD, equal weight (see *Instrument expansion* below) |
 | Timeframe | H4 |
-| Slow signal | sign of trailing 60-trading-day return (308 H4 bars) |
-| Fast signal | sign of trailing 10-trading-day return (51 H4 bars) |
+| Slow signal | sign of trailing 60-trading-day return (308 H4 bars gold, 251 BTC) |
+| Fast signal | sign of trailing 10-trading-day return (51 H4 bars gold, 42 BTC) |
 | Position | static 50/50 blend of the two, **long-only** |
 | Regime filter | flat when 20-day realised vol is in its trailing 2-year top decile |
 | Sizing | inverse 20-day realised vol (close-to-close), 15% annual target, 3× cap |
@@ -153,6 +155,35 @@ the DSR is the reason not to over-trust it. BTC's early history (2011–13) is
 thin, its swap is −20%/yr both ways, and crypto costs were measured on a 7-day
 screening window — re-measure on 30 days before trading.
 
+## Execution: EA + parity test (steps 6–7)
+
+[`mql5/TSMOM_Blend_EA.mq5`](mql5/TSMOM_Blend_EA.mq5) implements the spec for both
+sleeves in one multi-symbol expert. Against the Python backtest over 2016–2026,
+after warm-up:
+
+| Sleeve | Bars | Fields matching | Trades matched |
+|---|---|---|---|
+| XAUUSD | 14,234 | 7 of 7 (max diff 5e-9) | **462 / 462** |
+| BTCUSD | 13,962 | 7 of 7 (max diff 5e-9) | **585 / 585** |
+
+Zero trades on either side that the other did not take. Strategy Tester
+economics on the broker's own spreads, swaps and lot rounding: 100,000 →
+322,124 over 10.7 years (~11.6%/yr), against Python's 11.9%.
+
+**The parity test caught two defects that no Python backtest could:**
+
+1. **Hedging-account position stacking.** The first tester run hit a margin stop
+   out and ended with 11,538 of a 100,000 deposit. On a hedging account every
+   `Buy` opens a *new* position; the EA read only the first one, thought it was
+   flat, and bought again every bar. Fixed by netting across all positions and
+   closing rather than selling to reduce.
+2. **The regime filter needs ~2 years of history loaded.** With a cold cache it
+   computes its volatility decile from too small a sample and mis-fires for the
+   first year or two. **Before going live, make sure the terminal has at least
+   ~2,900 H4 bars per sleeve downloaded.** Signals and sizing are unaffected.
+
+Full detail: [`reports/parity.md`](reports/parity.md).
+
 ## Where this sits against the overall goal
 
 | Goal (brief §1.4) | Target | Actual |
@@ -222,7 +253,9 @@ instruction.
 
 ## Next step
 
-Re-measure BTCUSD costs on the full 30-day tick window. Then build step 6: the
-MQL5 EA for both sleeves, then the step 7 parity test — running the same date
-range through Python and MQL5 and reconciling trade by trade. The brief flags
+Build step 8: paper/demo execution — and only on explicit instruction. Before
+that, two things to fix: the EA's kill switch pairs the two symbols' bars
+positionally while Python aligns by timestamp (gold has no weekend bars, BTC
+does), and the terminal needs ~2,900 H4 bars per sleeve cached so the regime
+filter starts correct. The brief flags
 that as the classic backtest-to-live failure and worth more effort than it looks.
