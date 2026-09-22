@@ -31,6 +31,11 @@ REPORTS = un.REPORTS
 
 # The specification, unchanged from Book B. Nothing here is re-tuned per
 # instrument -- that is the whole point of the exercise.
+# VOL_TARGET stays 0.15 here ON PURPOSE. This is the RESEARCH path: the
+# cross-instrument screen, the holdout and the harness reports were all produced
+# at 0.15 and must stay reproducible. Volatility targeting is a leverage dial and
+# Sharpe is invariant to it, so none of those verdicts depend on the setting.
+# The deployed path reads src/deploy_config.py instead.
 SLOW_D, FAST_D, VOL_TARGET, MAX_LEV = 60, 10, 0.15, 3.0
 DIRECTION = "long_only"
 

@@ -1,0 +1,8 @@
+symbol,group,min_lot,contract,price,min_position_usd,description
+BTCETH,Crypto,0.01,1.0,31.32,0.31,Bitcoin vs Ethereum
+BTCLTC,Crypto,0.01,1.0,1368.4,13.68,Bitcoin vs Litecoin
+BCHUSD,Crypto,0.2,1.0,342.36,68.47,Bitcoin Cash vs US Dollar
+XAUUSDmicro,Metals,0.1,1.0,4358.99,435.9,Gold vs US Dollar micro (1 lot=1 unit)
+BTCUSD,Crypto,0.01,1.0,86278.57,862.79,Bitcoin vs US Dollar
+XAUEUR,Metals,0.01,100.0,3807.33,3807.33,Gold vs Euro
+XAUUSD,Metals,0.01,100.0,4359.04,4359.04,Gold vs US Dollar

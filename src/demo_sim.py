@@ -34,6 +34,7 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 import src.book_b as bb  # noqa: E402
+import src.deploy_config as dc  # noqa: E402
 import src.holdout as ho  # noqa: E402
 import src.screen_universe as su  # noqa: E402
 from common.financing import rollover_nights  # noqa: E402
@@ -56,17 +57,35 @@ def weights(sym: str, costs: dict):
     r = bb.run(df, costs, slow_bars=max(2, int(round(su.SLOW_D * bpd))),
                fast_bars=max(1, int(round(su.FAST_D * bpd))),
                mode="blend5050", direction=su.DIRECTION,
-               vol_target=su.VOL_TARGET, max_leverage=su.MAX_LEV)
+               vol_target=dc.DEPLOY_VOL_TARGET, max_leverage=dc.DEPLOY_MAX_LEVERAGE)
     return df, r["weights"]
 
 
 def simulate(start_equity: float, quantise: bool, costs_map: dict,
-             sleeves=None) -> dict:
-    """Bar-by-bar account simulation on the union clock."""
+             sleeves=None, mode: str = "floor", start=None, end=None) -> dict:
+    """Bar-by-bar account simulation on the union clock.
+
+    `mode` decides what happens when the target position is smaller than the
+    broker's minimum lot:
+
+      "floor"    hold nothing. This is what the EA actually does, and it is the
+                 safe behaviour: a position you cannot size is a position you
+                 should not take.
+      "forcemin" take the minimum lot anyway. Not the deployed behaviour -- it
+                 is here to answer "what if I trade a small account regardless",
+                 by measuring the leverage and drawdown it produces rather than
+                 asserting they would be bad.
+
+    `start`/`end` restrict the simulation to one price regime. That matters:
+    run from 2011 the minimums look affordable because gold was $1,400 and BTC
+    was $5, which tells you nothing about what an account can do today.
+    """
     sleeves = sleeves or list(SLEEVES)
     px, w, nights = {}, {}, {}
     for s in sleeves:
         df, ws = weights(s, costs_map[s])
+        if start or end:
+            df, ws = df.loc[start:end], ws.loc[start:end]
         px[s] = df["close"].astype(float)
         w[s] = ws
         nights[s] = rollover_nights(df.index, costs_map[s]["triple_weekday"])
@@ -85,6 +104,7 @@ def simulate(start_equity: float, quantise: bool, costs_map: dict,
     equity = start_equity
     lots = {s: 0.0 for s in sleeves}
     eq_curve, flat_bars, traded_bars = [], {s: 0 for s in sleeves}, 0
+    leverage, ruined = [], False
 
     for i in range(1, len(idx)):
         pnl = 0.0
@@ -97,7 +117,12 @@ def simulate(start_equity: float, quantise: bool, costs_map: dict,
                 rate = costs_map[s]["swap_long_annual"]
                 pnl += lots[s] * cs * p_now * rate * N[s].iloc[i] / 365.0
         equity += pnl
+        if equity <= 0:
+            ruined = True
+            eq_curve.append(0.0)
+            break
 
+        gross = 0.0
         for s in sleeves:
             cs, minlot, step = SLEEVES[s]
             p_now = P[s].iloc[i]
@@ -108,7 +133,9 @@ def simulate(start_equity: float, quantise: bool, costs_map: dict,
             if quantise:
                 tgt = np.floor(raw / step) * step
                 if tgt < minlot:
-                    tgt = 0.0
+                    # The whole question in one line: refuse the trade, or take
+                    # a position larger than the strategy asked for.
+                    tgt = minlot if (mode == "forcemin" and W[s].iloc[i] > 0) else 0.0
             else:
                 tgt = raw
             if tgt != lots[s]:
@@ -118,19 +145,25 @@ def simulate(start_equity: float, quantise: bool, costs_map: dict,
                 traded_bars += 1
             if tgt == 0.0 and W[s].iloc[i] > 0:
                 flat_bars[s] += 1
+            gross += lots[s] * cs * p_now
+        leverage.append(gross / equity if equity > 0 else np.nan)
         eq_curve.append(equity)
 
-    eq = pd.Series(eq_curve, index=idx[1:])
+    eq = pd.Series(eq_curve, index=idx[1:1 + len(eq_curve)])
     ret = eq.pct_change().fillna(0.0)
     ppy = len(idx) / ((idx[-1] - idx[0]).days / 365.25)
-    s = summarize(ret, periods_per_year=int(round(ppy)))
+    s = summarize(ret, periods_per_year=int(round(ppy))) or {}
     years = (idx[-1] - idx[0]).days / 365.25
+    lev = np.array([x for x in leverage if np.isfinite(x)])
     return {
-        "quantised": quantise, "start_equity": start_equity,
+        "quantised": quantise, "mode": mode, "start_equity": start_equity,
         "sleeves": "+".join(sleeves),
         "final_equity": round(float(eq.iloc[-1]), 2),
         "cagr": round(s.get("cagr", 0), 4), "sharpe": round(s.get("sharpe", 0), 3),
         "max_dd": round(s.get("max_drawdown", 0), 3),
+        "ruined": ruined,
+        "avg_leverage": round(float(lev.mean()), 2) if len(lev) else np.nan,
+        "peak_leverage": round(float(lev.max()), 2) if len(lev) else np.nan,
         "lost_bars_gold": flat_bars.get("XAUUSD", 0),
         "lost_bars_btc": flat_bars.get("BTCUSD", 0),
         "trades_per_week": round(traded_bars / years / 52, 2),

@@ -30,11 +30,18 @@ position is $437 against the ~$39 of exposure the strategy wants there, about
 11× too big; the EA holds nothing and logs the requirement rather than taking
 an 8.7×-leverage position.
 
-| Configuration | Bare minimum | With sane granularity |
-|---|---|---|
-| Gold only (micro) | $635 | **$2,795** |
-| Both sleeves (micro gold + BTC) | $4,144 | **$15,869** |
-| Both sleeves, standard XAUUSD | $12,706 | $55,893 |
+| Configuration | Equity needed (at the 10% vol target) |
+|---|---|
+| Gold sleeve alone, nearly all signals | ~$2,000 |
+| Both sleeves, gold full + BTC partial | ~$5,000 |
+| Both sleeves, nearly all signals | ~**$7,000** |
+
+At **$200 neither sleeve can ever open a position** — the smallest gold and BTC
+positions on this broker are $436 and $863, i.e. 2.2× and 4.3× the whole
+account, and no smaller lot exists. Forcing the minimum lot anyway was
+simulated across four regimes: it survives, but at −19% to −57% drawdowns and
+up to 5.8× leverage that *rises as the account falls*. See
+[`reports/small_account.md`](reports/small_account.md).
 
 Detail in [`reports/demo_deployment.md`](reports/demo_deployment.md).
 
@@ -58,7 +65,7 @@ most conservative trial count (see *Instrument expansion*).
 | Fast signal | sign of trailing 10-trading-day return (51 H4 bars gold, 42 BTC) |
 | Position | static 50/50 blend of the two, **long-only** |
 | Regime filter | flat when 20-day realised vol is in its trailing 2-year top decile |
-| Sizing | inverse 20-day realised vol (close-to-close), 15% annual target, 3× cap |
+| Sizing | inverse 20-day realised vol (close-to-close), **10%** annual target, 3× cap |
 | Kill switch | flat when aggregate realised vol exceeds its trailing 95th percentile |
 | Execution | signal read at bar close, position held from the **next** bar |
 
@@ -159,8 +166,8 @@ XAUEUR, BTCUSD, ETHUSD). Of those, **two passed the pre-2020 holdout**:
 | | Gold alone | **Gold + BTC** (with kill switch) |
 |---|---|---|
 | Sharpe | 0.93 | **1.70** |
-| CAGR | 8.2% | **11.9%** |
-| Max drawdown | −16.7% | **−12.8%** |
+| CAGR | 5.5% | **8.4%** |
+| Max drawdown | −11.4% | **−9.0%** |
 | Holdout Sharpe | 0.59 | **1.64** |
 | Trades / week | ~0.9 | **2.03** |
 
@@ -242,6 +249,34 @@ A costing error surfaced too: a constant $2.42 BTC spread is **50% of BTC's
 2.25. **The headline numbers in this README keep the over-conservative constant
 spread**, so no result rests on a cost assumption changed after seeing an
 unfavourable outcome.
+
+## Drawdown reduced to −9.0%, by holding less
+
+The deployed volatility target moved from 15% to **10%**, taking the
+portfolio's worst peak-to-trough from −13.3% to **−9.0%** (−12.8% → −8.7% with
+the kill switch). Full detail: [`reports/drawdown.md`](reports/drawdown.md).
+
+| Vol target | Max DD | CAGR | Sharpe |
+|---|---|---|---|
+| 15% (previous) | −13.3% | 12.7% | **1.701** |
+| **10% (current)** | **−9.0%** | **8.4%** | **1.701** |
+| 7.5% | −6.6% | 5.8% | 1.697 |
+
+**Sharpe is identical — this is scaling, not improvement.** The book is held
+smaller and return falls in the same proportion as risk. Two things follow:
+the leverage cap is not a second lever (3× → 1.5× moves drawdown only −12.8% →
+−12.2%), and swapping to a lower-Sharpe variant that happens to drawdown less
+is strictly dominated by simply scaling this one down. No new trials were spent
+— the dial changes no decision the strategy makes, only position size.
+
+The cost: a smaller target asks for smaller positions while the broker's
+minimum lot stays put, so **this raises the minimum account size** (BTC sleeve
+from ~$5,000 to ~$7,000).
+
+Set in `src/deploy_config.py` and matched by the EA preset. The research path
+(`screen_universe.py`, `analyze_book_b.py`, `run_book_b.py`) stays at 0.15 so
+the screen, holdout, deflated-Sharpe and harness reports remain reproducible —
+and since Sharpe is invariant to the dial, none of those verdicts depend on it.
 
 ## Where this sits against the overall goal
 

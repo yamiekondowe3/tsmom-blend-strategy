@@ -37,7 +37,12 @@ SPEC = {
     "XAUUSD": dict(slow=308, fast=51, volwin=103, regimelb=2586, ppy=1584.1),
     "BTCUSD": dict(slow=251, fast=42, volwin=84, regimelb=2108, ppy=1508.3),
 }
-VOL_TARGET, MAX_LEV, REGIME_DECILE = 0.15, 3.0, 0.90
+from src.deploy_config import DEPLOY_VOL_TARGET, DEPLOY_MAX_LEVERAGE  # noqa: E402
+
+# These MUST equal the EA's VolTarget / MaxLeverage inputs. If one moves and the
+# other does not, parity fails on `vol_scale` and `pos_raw` -- which is the point
+# of sourcing both sides from one constant.
+VOL_TARGET, MAX_LEV, REGIME_DECILE = DEPLOY_VOL_TARGET, DEPLOY_MAX_LEVERAGE, 0.90
 
 
 def python_state(symbol: str) -> pd.DataFrame:

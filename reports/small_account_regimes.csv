@@ -1,0 +1,9 @@
+regime,mode,final_equity,cagr,sharpe,max_dd,ruined,avg_leverage,peak_leverage
+2013-15 gold bear,floor,237.8,0.0617,3.04,-0.02,False,0.01,0.08
+2013-15 gold bear,forcemin,238.09,0.0622,1.699,-0.054,False,0.09,0.66
+2018-19,floor,206.75,0.0168,0.807,-0.015,False,0.01,0.67
+2018-19,forcemin,225.0,0.0609,0.515,-0.189,False,0.26,1.09
+2021-23 crypto winter,floor,200.0,0.0,0.0,0.0,False,0.0,0.0
+2021-23 crypto winter,forcemin,440.04,0.3021,0.808,-0.53,False,0.5,3.13
+2024-now (bull),floor,200.0,0.0,0.0,0.0,False,0.0,0.0
+2024-now (bull),forcemin,880.07,0.7237,1.24,-0.57,False,1.03,5.75

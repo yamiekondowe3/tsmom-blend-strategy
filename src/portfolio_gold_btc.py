@@ -24,6 +24,7 @@ REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
 import src.book_b as bb  # noqa: E402
+import src.deploy_config as dc  # noqa: E402
 import src.holdout as ho  # noqa: E402
 import src.portfolio_b as pbk  # noqa: E402  (section 6 kill switch)
 import src.screen_universe as su  # noqa: E402
@@ -50,7 +51,7 @@ def sleeve(sym: str, costs: dict, spread_mult: float = 1.0, fin_mult: float = 1.
     r = bb.run(df, c, slow_bars=max(2, int(round(su.SLOW_D * bpd))),
                fast_bars=max(1, int(round(su.FAST_D * bpd))),
                mode="blend5050", direction=su.DIRECTION,
-               vol_target=su.VOL_TARGET, max_leverage=su.MAX_LEV)
+               vol_target=dc.DEPLOY_VOL_TARGET, max_leverage=dc.DEPLOY_MAX_LEVERAGE)
     return r["returns"], r["weights"]
 
 

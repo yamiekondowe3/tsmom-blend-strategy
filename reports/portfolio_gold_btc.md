@@ -1,6 +1,6 @@
 # Book B portfolio -- gold + bitcoin
 
-Generated 2026-09-22 19:57 UTC from `6289430@Deriv-Demo` (DEMO).
+Generated 2026-09-22 20:31 UTC from `6289430@Deriv-Demo` (DEMO).
 
 > **Provisional.** Costs read from a DEMO account. Demo spreads and swaps can differ from live. Every figure derived from this file must be re-read on the live account before capital is committed.
 
@@ -10,18 +10,18 @@ Sleeves: **XAUUSD + BTCUSD**, equal-weight, same fixed specification on each. Re
 
 | period | from | to | portfolio_sharpe | portfolio_cagr | portfolio_max_dd | gold_only_sharpe | gold_only_cagr | gold_only_max_dd | trades_per_week |
 |---|---|---|---|---|---|---|---|---|---|
-| holdout (pre-screen) | 2011-03-23 | 2020-09-21 | 1.568 | 0.1064 | -0.133 | 0.592 | 0.045 | -0.167 | 1.61 |
-| screen window | 2020-09-22 | 2026-09-22 | 1.871 | 0.161 | -0.084 | 1.339 | 0.1425 | -0.099 | 2.72 |
-| full | 2011-03-23 | 2026-09-22 | 1.701 | 0.1272 | -0.133 | 0.926 | 0.0817 | -0.167 | 2.03 |
+| holdout (pre-screen) | 2011-03-23 | 2020-09-21 | 1.568 | 0.0703 | -0.09 | 0.592 | 0.0306 | -0.114 | 1.61 |
+| screen window | 2020-09-22 | 2026-09-22 | 1.871 | 0.1053 | -0.056 | 1.339 | 0.094 | -0.067 | 2.72 |
+| full | 2011-03-23 | 2026-09-22 | 1.701 | 0.0837 | -0.09 | 0.926 | 0.0547 | -0.114 | 2.03 |
 
 ## Kill switch (section 6), like for like
 
 | book | overlay | sharpe | cagr | max_dd | holdout_sharpe | pct_time_flat |
 |---|---|---|---|---|---|---|
-| gold alone | none | 0.926 | 0.0817 | -0.167 | 0.592 | 0.0 |
-| gold alone | kill switch | 1.054 | 0.0871 | -0.137 | 0.732 | 0.053 |
-| gold + BTC | none | 1.701 | 0.1272 | -0.133 | 1.568 | 0.0 |
-| gold + BTC | kill switch | 1.697 | 0.1188 | -0.128 | 1.642 | 0.056 |
+| gold alone | none | 0.926 | 0.0547 | -0.114 | 0.592 | 0.0 |
+| gold alone | kill switch | 1.054 | 0.058 | -0.093 | 0.732 | 0.053 |
+| gold + BTC | none | 1.701 | 0.0837 | -0.09 | 1.568 | 0.0 |
+| gold + BTC | kill switch | 1.697 | 0.0782 | -0.087 | 1.642 | 0.056 |
 
 ## Rolling 2-year windows (Sharpe)
 

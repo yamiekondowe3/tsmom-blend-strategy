@@ -13,7 +13,7 @@
 //|   pos   = 0.5*slow + 0.5*fast, long-only                         |
 //|   filter= flat when 20d realised vol is in its trailing 2y top   |
 //|           decile                                                 |
-//|   size  = inverse 20d realised vol, 15% annual target, 3x cap    |
+//|   size  = inverse 20d realised vol, 10% annual target, 3x cap    |
 //|   kill  = aggregate realised vol above its trailing 95th pctile  |
 //|           flattens everything (section 6, portfolio level)       |
 //|   exec  = signal read from the LAST CLOSED bar, position held    |
@@ -58,7 +58,7 @@ input int     Sleeve2VolWindow   = 84;    // 20 trading days
 input int     Sleeve2RegimeLB    = 2108;  // 2 years
 input double  Sleeve2PeriodsYear = 1508.3;
 
-input double  VolTarget          = 0.15;  // annualised
+input double  VolTarget          = 0.10;  // annualised; see src/deploy_config.py
 input double  MaxLeverage        = 3.0;
 input double  RegimeDecile       = 0.90;
 input double  KillPercentile     = 0.95;
@@ -153,11 +153,21 @@ int OnInit()
                   "= smallest tradable weight %.3f at equity %.2f",
                   i+1, g_sleeve[i].symbol, g_sleeve[i].exec, minnot,
                   AccountInfoString(ACCOUNT_CURRENCY), min_w, eq);
-      if(min_w>1.0)
-         PrintFormat("   WARNING %s: the smallest position is %.1fx what a weight "
-                     "of 1.0 asks for. This sleeve cannot be sized at this equity "
-                     "and will hold nothing. Needs about %.0f for typical signals.",
-                     g_sleeve[i].exec, min_w, minnot/(SleeveAllocation*0.78));
+      // Equity needed for a TYPICAL signal, using each sleeve's own median
+      // in-market weight measured over the last year at a 10% vol target
+      // (gold 0.521, BTC 0.362 -- see reports/small_account.md). Quoting the
+      // median rather than a weight of 1.0 is the honest figure: it is the
+      // account size at which half the signals are actually holdable.
+      double med_w=(i==0)?0.521:0.362;
+      PrintFormat("   %s: equity for a typical signal ~%.0f %s "
+                  "(median in-market weight %.3f)",
+                  g_sleeve[i].exec, minnot/(SleeveAllocation*med_w),
+                  AccountInfoString(ACCOUNT_CURRENCY), med_w);
+      if(min_w>med_w)
+         PrintFormat("   WARNING %s: the smallest position needs a weight of %.3f "
+                     "but the typical signal is %.3f. This sleeve will hold "
+                     "nothing most of the time at this equity.",
+                     g_sleeve[i].exec, min_w, med_w);
      }
 
    if(DumpParity) ParityHeader();
