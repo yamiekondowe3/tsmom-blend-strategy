@@ -58,3 +58,51 @@ equity 9,973.30 (start 10,000.00, -0.27%) | peak 10,000.00 | DD -0.27% | held: B
 - parity XAUUSD @ 09-23 04:00: EA == Python
 - parity BTCUSD @ 09-23 04:00: EA == Python
 - no findings
+
+### Wed 2026-09-23 10:39
+equity 9,971.35 (start 10,000.00, -0.29%) | peak 10,000.00 | DD -0.29% | held: BTCUSD 0.01, XAUUSDmicro 0.50
+- parity XAUUSD @ 09-23 08:00: EA == Python
+- parity BTCUSD @ 09-23 08:00: EA == Python
+- no findings
+
+### Wed 2026-09-23 14:39
+equity 9,961.10 (start 10,000.00, -0.39%) | peak 10,000.00 | DD -0.39% | held: BTCUSD 0.01
+- fill: Wed 23 12:00 XAUUSDmicro sell 0.5 @ 4,309.52  P/L -27.33
+- parity XAUUSD @ 09-23 12:00: EA == Python
+- EVENT XAUUSD: fast signal +1 -> -1
+- EVENT XAUUSD: exited (w 0.474 -> 0.000)
+- parity BTCUSD @ 09-23 12:00: EA == Python
+- no findings
+
+### Wed 2026-09-23 18:39
+equity 9,946.95 (start 10,000.00, -0.53%) | peak 10,000.00 | DD -0.53% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-23 12:00: EA == Python
+- parity BTCUSD @ 09-23 12:00: EA == Python
+- no findings
+
+### Wed 2026-09-23 18:40
+Book B equity 9,946.16 (start 10,000.00, -0.54%) | peak 10,000.00 | DD -0.54% | held: BTCUSD 0.01
+- **FINDING** EA NOT ATTACHED -- TSMOM_Blend_EA removed 23/09 14:23. Book B is not being managed; any open Book B position is orphaned.
+- parity XAUUSD @ 09-23 12:00: EA == Python
+- parity BTCUSD @ 09-23 12:00: EA == Python
+
+## Finding 2 (2026-09-23 14:23): Book B was removed from the terminal
+
+At 14:23 local the terminal exited cleanly and relaunched from
+`vrp-index-strategy\mql5\start_demo.ini`. That start config loads only
+`VRP_Index_EA` (US SP 500, H1, preset `VRP_demo_2000.set`), so
+`TSMOM_Blend_EA` was removed. Its last decision was the 12:00 broker bar; the
+16:00 bar was never acted on.
+
+- The BTCUSD 0.01 Book B position (magic 20260922) is still open and now
+  **unmanaged**.
+- The gold sleeve was flat at removal (it exited at 12:00 for -27.33).
+- The VRP EA shares the same demo account, so **account equity no longer
+  measures Book B**. The watcher now computes Book B equity from magic-20260922
+  deals and positions only.
+- The watcher missed this for ~4h: the terminal process was alive and EA
+  silence was under the 5h threshold. It now also reads the terminal journal
+  for `TSMOM_Blend_EA` load/remove events.
+
+Not restarted: the change came from outside this watch, and putting Book B back
+means choosing how the two strategies share the one terminal and account.

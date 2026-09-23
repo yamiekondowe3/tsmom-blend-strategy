@@ -98,6 +98,26 @@ def live_state(mt5, symbol: str) -> pd.DataFrame:
     return par.python_state(symbol, df.set_index("timestamp"))
 
 
+def ea_attached() -> tuple[bool, str]:
+    """Is TSMOM_Blend_EA currently attached? The terminal journal logs every load
+    and removal; the process being alive says nothing about which EA is on it
+    (a restart from another strategy's start config removes this one silently)."""
+    last = (False, "never loaded since deployment")
+    for f in sorted((TERMINAL / "logs").glob("2*.log")):
+        if dt.datetime.strptime(f.stem, "%Y%m%d").date() < DEPLOYED.date():
+            continue
+        for line in f.read_text(encoding="utf-16", errors="ignore").splitlines():
+            p = line.split("	")
+            if len(p) < 5 or "expert TSMOM_Blend_EA" not in p[-1]:
+                continue
+            when = f"{f.stem[6:]}/{f.stem[4:6]} {p[2][:5]}"
+            if "removed" in p[-1]:
+                last = (False, f"removed {when}")
+            elif "loaded successfully" in p[-1]:
+                last = (True, f"loaded {when}")
+    return last
+
+
 def terminal_running() -> bool:
     out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq terminal64.exe"],
                          capture_output=True, text=True).stdout
@@ -114,6 +134,10 @@ def main() -> int:
     # 1. HEALTH ---------------------------------------------------------------
     if not terminal_running():
         findings.append("TERMINAL DOWN -- terminal64.exe is not running; the EA is not trading.")
+    attached, how = ea_attached()
+    if not attached:
+        findings.append(f"EA NOT ATTACHED -- TSMOM_Blend_EA {how}. Book B is not being "
+                        f"managed; any open Book B position is orphaned.")
     dec = ea_decisions()
     if dec.empty:
         findings.append("NO EA DECISIONS in the logs since deployment.")
@@ -139,8 +163,18 @@ def main() -> int:
                  if d.magic == MAGIC]
         realised = sum(d.profit + d.commission + d.swap + d.fee for d in deals)
         start = state.get("start_equity", round(acct.balance - realised, 2))
-        peak = max(state.get("peak_equity", start), acct.equity)
-        dd = acct.equity / peak - 1
+        # Book B's equity from its own deals and positions only -- account
+        # equity mixes in anything else trading on the account.
+        allpos = mt5.positions_get() or []
+        floating = sum(p.profit + p.swap for p in allpos if p.magic == MAGIC)
+        book = start + realised + floating
+        foreign = [p for p in allpos if p.magic != MAGIC]
+        if foreign:
+            notes.append(f"other positions on the account (not Book B): {len(foreign)} "
+                         f"({', '.join(sorted({p.symbol for p in foreign}))}); "
+                         f"account equity {acct.equity:,.2f}")
+        peak = max(state.get("peak_book", start), book)
+        dd = book / peak - 1
         if dd <= BACKTEST_MAX_DD:
             findings.append(f"DRAWDOWN {dd:.2%} is beyond the backtest's worst "
                             f"({BACKTEST_MAX_DD:.1%}). Stop and review.")
@@ -223,13 +257,13 @@ def main() -> int:
     finally:
         mt5.shutdown()
 
-    state.update({"start_equity": start, "peak_equity": round(peak, 2),
+    state.update({"start_equity": start, "peak_book": round(peak, 2),
                   "last_deal": max([d.ticket for d in deals], default=state.get("last_deal", 0)),
                   "sleeves": sleeves or state.get("sleeves", {}),
                   "last_run": now.isoformat(timespec="minutes")})
     holding = ", ".join(f"{k} {v:.2f}" for k, v in held.items()) or "flat"
-    acct_line = (f"equity {acct.equity:,.2f} (start {start:,.2f}, "
-                 f"{acct.equity / start - 1:+.2%}) | peak {peak:,.2f} | DD {dd:.2%} | "
+    acct_line = (f"Book B equity {book:,.2f} (start {start:,.2f}, "
+                 f"{book / start - 1:+.2%}) | peak {peak:,.2f} | DD {dd:.2%} | "
                  f"held: {holding}")
     return report(now, findings, notes, state, acct_line)
 
