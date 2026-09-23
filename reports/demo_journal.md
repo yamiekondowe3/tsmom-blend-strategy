@@ -37,3 +37,24 @@ that flips the signal is not acted on until Sunday night. The fix is an
 independent of the chart symbol. **Not applied**: it changes the running EA and
 needs a decision. Until then, `watch_book_b.py` reports any weekend gap in which
 BTC's signal has flipped and the position has not.
+
+### Wed 2026-09-23 02:39
+equity 9,995.05 (start 10,000.00, -0.05%) | peak 10,000.00 | DD -0.05% | held: BTCUSD 0.01, XAUUSDmicro 0.50
+- fill: Wed 23 00:00 XAUUSDmicro buy 0.5 @ 4,364.17  P/L +0.00
+- parity XAUUSD @ 09-23 00:00: EA == Python
+- EVENT XAUUSD: fast signal -1 -> +1
+- EVENT XAUUSD: entered (w 0.000 -> 0.475)
+- parity BTCUSD @ 09-23 00:00: EA == Python
+- no findings
+
+### Wed 2026-09-23 06:39
+equity 9,994.75 (start 10,000.00, -0.05%) | peak 10,000.00 | DD -0.05% | held: BTCUSD 0.01, XAUUSDmicro 0.50
+- parity XAUUSD @ 09-23 04:00: EA == Python
+- parity BTCUSD @ 09-23 04:00: EA == Python
+- no findings
+
+### Wed 2026-09-23 09:47
+equity 9,973.30 (start 10,000.00, -0.27%) | peak 10,000.00 | DD -0.27% | held: BTCUSD 0.01, XAUUSDmicro 0.50
+- parity XAUUSD @ 09-23 04:00: EA == Python
+- parity BTCUSD @ 09-23 04:00: EA == Python
+- no findings
