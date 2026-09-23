@@ -106,3 +106,28 @@ At 14:23 local the terminal exited cleanly and relaunched from
 
 Not restarted: the change came from outside this watch, and putting Book B back
 means choosing how the two strategies share the one terminal and account.
+
+### Wed 2026-09-23 22:40
+Book B equity 9,950.15 (start 10,000.00, -0.50%) | peak 10,000.00 | DD -0.50% | held: BTCUSD 0.01
+- **FINDING** EA NOT ATTACHED -- TSMOM_Blend_EA removed 23/09 14:23. Book B is not being managed; any open Book B position is orphaned.
+- **FINDING** EA SILENT for 8.7h on a trading day -- last decision logged Wed 14:00.
+- parity XAUUSD @ 09-23 12:00: EA == Python
+- parity BTCUSD @ 09-23 12:00: EA == Python
+
+### Wed 2026-09-23 23:17
+Book B equity 9,948.93 (start 10,000.00, -0.51%) | peak 10,000.00 | DD -0.51% | held: BTCUSD 0.01
+- **FINDING** EA SILENT for 9.3h on a trading day -- last decision logged Wed 14:00.
+- parity XAUUSD @ 09-23 12:00: EA == Python
+- parity BTCUSD @ 09-23 12:00: EA == Python
+
+## 2026-09-23 23:15: Book B re-attached by hand
+
+Dutch attached `TSMOM_Blend_EA` to the XAUUSD H4 chart manually (first with
+defaults, which the EA refused to trade -- `AllowLiveTrading=false` -- then with
+`TSMOM_demo.set`: exec XAUUSDmicro, 10% vol). A manually attached EA is saved in
+the chart profile, so a restart from another strategy's start config should no
+longer drop it. Gold was in its daily break (last tick 20:58:59 broker), so
+the first decision waits for the reopen.
+
+`VRP_Index_EA` was removed from its US SP 500 H1 chart at 23:16:26; it held no
+positions.
