@@ -107,7 +107,7 @@ def ea_attached() -> tuple[bool, str]:
         if dt.datetime.strptime(f.stem, "%Y%m%d").date() < DEPLOYED.date():
             continue
         for line in f.read_text(encoding="utf-16", errors="ignore").splitlines():
-            p = line.split("	")
+            p = line.split("\t")
             if len(p) < 5 or "expert TSMOM_Blend_EA" not in p[-1]:
                 continue
             when = f"{f.stem[6:]}/{f.stem[4:6]} {p[2][:5]}"
