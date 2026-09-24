@@ -131,3 +131,27 @@ the first decision waits for the reopen.
 
 `VRP_Index_EA` was removed from its US SP 500 H1 chart at 23:16:26; it held no
 positions.
+
+### Thu 2026-09-24 00:07
+Book B equity 9,950.48 (start 10,000.00, -0.50%) | peak 10,000.00 | DD -0.50% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-23 20:00: EA == Python
+- parity BTCUSD @ 09-23 20:00: EA == Python
+- no findings
+
+### Thu 2026-09-24 02:39
+Book B equity 9,948.63 (start 10,000.00, -0.51%) | peak 10,000.00 | DD -0.51% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-24 00:00: EA == Python
+- parity BTCUSD @ 09-24 00:00: EA == Python
+- no findings
+
+### Thu 2026-09-24 06:39
+Book B equity 9,944.28 (start 10,000.00, -0.56%) | peak 10,000.00 | DD -0.56% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-24 04:00: EA == Python
+- parity BTCUSD @ 09-24 04:00: EA == Python
+- no findings
+
+### Thu 2026-09-24 09:47
+Book B equity 9,949.16 (start 10,000.00, -0.51%) | peak 10,000.00 | DD -0.51% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-24 04:00: EA == Python
+- parity BTCUSD @ 09-24 04:00: EA == Python
+- no findings
