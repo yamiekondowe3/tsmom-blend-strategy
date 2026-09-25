@@ -155,3 +155,45 @@ Book B equity 9,949.16 (start 10,000.00, -0.51%) | peak 10,000.00 | DD -0.51% | 
 - parity XAUUSD @ 09-24 04:00: EA == Python
 - parity BTCUSD @ 09-24 04:00: EA == Python
 - no findings
+
+### Thu 2026-09-24 10:39
+Book B equity 9,943.90 (start 10,000.00, -0.56%) | peak 10,000.00 | DD -0.56% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-24 08:00: EA == Python
+- parity BTCUSD @ 09-24 08:00: EA == Python
+- no findings
+
+### Thu 2026-09-24 14:39
+Book B equity 9,939.19 (start 10,000.00, -0.61%) | peak 10,000.00 | DD -0.61% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-24 12:00: EA == Python
+- parity BTCUSD @ 09-24 12:00: EA == Python
+- no findings
+
+### Thu 2026-09-24 18:39
+Book B equity 9,952.12 (start 10,000.00, -0.48%) | peak 10,000.00 | DD -0.48% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-24 16:00: EA == Python
+- parity BTCUSD @ 09-24 16:00: EA == Python
+- no findings
+
+### Thu 2026-09-24 22:39
+Book B equity 9,949.15 (start 10,000.00, -0.51%) | peak 10,000.00 | DD -0.51% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-24 20:00: EA == Python
+- parity BTCUSD @ 09-24 20:00: EA == Python
+- no findings
+
+### Fri 2026-09-25 02:39
+Book B equity 9,950.94 (start 10,000.00, -0.49%) | peak 10,000.00 | DD -0.49% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-25 00:00: EA == Python
+- parity BTCUSD @ 09-25 00:00: EA == Python
+- no findings
+
+### Fri 2026-09-25 06:39
+Book B equity 9,947.04 (start 10,000.00, -0.53%) | peak 10,000.00 | DD -0.53% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-25 04:00: EA == Python
+- parity BTCUSD @ 09-25 04:00: EA == Python
+- no findings
+
+### Fri 2026-09-25 09:47
+Book B equity 9,944.53 (start 10,000.00, -0.55%) | peak 10,000.00 | DD -0.55% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-25 04:00: EA == Python
+- parity BTCUSD @ 09-25 04:00: EA == Python
+- no findings
