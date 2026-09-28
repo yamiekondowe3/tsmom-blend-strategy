@@ -282,3 +282,59 @@ Book B equity 9,950.54 (start 10,000.00, -0.49%) | peak 10,000.00 | DD -0.49% | 
 - parity XAUUSD @ 09-25 20:00: EA == Python
 - parity BTCUSD @ 09-25 20:00: EA == Python
 - no findings
+
+### Sun 2026-09-27 10:39
+Book B equity 9,952.11 (start 10,000.00, -0.48%) | peak 10,000.00 | DD -0.48% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-25 20:00: EA == Python
+- parity BTCUSD @ 09-25 20:00: EA == Python
+- no findings
+
+### Sun 2026-09-27 14:39
+Book B equity 9,954.50 (start 10,000.00, -0.46%) | peak 10,000.00 | DD -0.46% | held: BTCUSD 0.01
+- parity XAUUSD @ 09-25 20:00: EA == Python
+- parity BTCUSD @ 09-25 20:00: EA == Python
+- no findings
+
+### Mon 2026-09-28 18:39
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- fill: Mon 28 16:00 BTCUSD sell 0.01 @ 83,318.26  P/L -33.06
+- parity XAUUSD @ 09-28 16:00: EA == Python
+- EVENT XAUUSD: fast signal +1 -> -1
+- parity BTCUSD @ 09-28 16:00: EA == Python
+- EVENT BTCUSD: fast signal +1 -> -1
+- EVENT BTCUSD: exited (w 0.324 -> 0.000)
+- no findings
+
+## Finding 3 (2026-09-28): 22.7h offline over gold's reopen, then one stale decision
+
+**What happened.** The terminal's broker connection had been dropping and
+reconnecting all weekend (8 reconnects on Sunday morning alone). At Sun 16:10
+local it dropped and stayed down until **Mon 14:50** -- 22.7 hours, spanning
+gold's Sunday-night reopen. The EA made no decisions for the Mon 00:00, 04:00
+and 08:00 bars. The scheduled watcher checks were also silent over the same
+window, consistent with the machine sleeping or losing its connection; the
+Windows power log shows no sleep events, so the cause is not confirmed.
+
+**Stale first decision.** On reconnect (14:50) the EA acted on the 12:00 bar
+before the missing bars had synced, and disagreed with Python on both sleeves:
+it kept BTC long (w 0.319) where the full history says flat. At the next bar
+(16:00) it matched again and exited BTC. The four decisions since Sunday were
+re-checked individually: 2 mismatches, both that 14:50 decision.
+
+**Cost.** None this time. Python would have exited BTC at the 12:00 open
+(83,053); the EA sold at 83,318 -- being late made +$2.65 on 0.01 lots. The
+weekend gap itself (Finding 1) did not bite: BTC's weight stayed 0.324-0.325.
+
+**Changes.**
+- `watch_book_b.py` now flags `TERMINAL OFFLINE` from `terminal_info().connected`.
+- Proposed, **not applied**: the EA should skip a bar until
+  `SERIES_SYNCHRONIZED` is true and the last closed H4 bar is the one expected,
+  so a reconnect never trades on stale history. Same change window as the
+  `OnTimer` fix for Finding 1.
+- The real fix for both is a host that stays on (VPS or no-sleep settings).
+
+### Mon 2026-09-28 18:41
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- parity XAUUSD @ 09-28 16:00: EA == Python
+- parity BTCUSD @ 09-28 16:00: EA == Python
+- no findings

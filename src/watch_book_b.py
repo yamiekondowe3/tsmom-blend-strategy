@@ -154,6 +154,11 @@ def main() -> int:
         return report(now, findings, notes, state, None)
     try:
         acct = mt5.account_info()
+        # A terminal can be running with the EA attached and still be cut off
+        # from the broker -- 2026-09-27/28 it was offline 22.7h across gold's
+        # reopen while every other health check looked fine.
+        if not mt5.terminal_info().connected:
+            findings.append("TERMINAL OFFLINE -- not connected to the broker; the EA cannot act.")
         if acct.trade_mode != 0:
             findings.append("NOT A DEMO ACCOUNT -- the EA should be refusing to trade.")
 
