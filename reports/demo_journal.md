@@ -359,3 +359,79 @@ Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | 
 - parity XAUUSD @ 09-29 04:00: EA == Python
 - parity BTCUSD @ 09-29 04:00: EA == Python
 - no findings
+
+### Tue 2026-09-29 10:39
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,937.83
+- parity XAUUSD @ 09-29 08:00: EA == Python
+- parity BTCUSD @ 09-29 08:00: EA == Python
+- no findings
+
+### Tue 2026-09-29 14:39
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,939.09
+- parity XAUUSD @ 09-29 12:00: EA == Python
+- parity BTCUSD @ 09-29 12:00: EA == Python
+- no findings
+
+### Tue 2026-09-29 18:37
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,935.56
+- parity XAUUSD @ 09-29 16:00: EA == Python
+- parity BTCUSD @ 09-29 16:00: EA == Python
+- no findings
+
+## Weekly report: 2026-09-22 to 2026-09-29
+
+**One week says nothing about performance.** At a 10% vol target a week's
+return has a standard deviation of about 1.4%, and the expected weekly gain at
+Sharpe ~1.7 is about 0.16%. A -0.62% week is 0.45 standard deviations -- noise.
+The book was also mostly partly invested or flat. What a week *can* judge is
+whether the live system does what the backtest assumes. That is what follows.
+
+### Result
+Book B equity 9,938.14 from 10,000.00: **-0.62%**, peak-to-trough -0.62%
+against a -9.0% backtest maximum. Realised -61.86 over 3 round trips:
+
+| Trade | P/L |
+|---|---|
+| BTCUSD 0.02 -> 0.01 resize on the vol-target change (Sep 22) | -1.47 |
+| XAUUSDmicro 0.5 long, Sep 23 00:00 -> 12:00 (fast signal flipped back) | -27.33 |
+| BTCUSD 0.01 long, held from Sep 22, exited Sep 28 16:00 | -33.06 (incl. financing) |
+
+### Execution fidelity: good
+- **Parity:** 45 watcher runs, 90 sleeve checks, 0 mismatches on the latest
+  decision. A full audit of the 28 Sep outage window found one bad decision
+  (Finding 3), taken on unsynced history right after a reconnect.
+- **Fills vs targets:** every fill matched the EA's logged target; no
+  duplicate positions, including after the manual re-attach, which adopted the
+  existing BTC position.
+- **Slippage beyond the spread** on the three bar-open fills: gold +0.2bp and
+  +0.1bp, BTC +0.8bp -- $0.13 in total. (The two Sep 22 BTC fills were mid-bar
+  redeploys and are not comparable to a bar open.)
+- **To measure next week:** the live BTCUSD spread read 18.42 at 18:37 Tuesday
+  against the 2.42 in the cost model (2.2bp vs 0.3bp at today's price). One
+  snapshot proves nothing, but if it holds, BTC costs are understated at
+  current prices. It is worth tick-sampling before trusting BTC's cost line.
+
+### The weekend (Finding 1)
+Gold closed Fri 25 Sep evening; the EA went quiet as expected. BTC's signal
+held steady all weekend (w 0.324-0.325), so the frozen 0.01 BTC position was
+exactly what the strategy wanted. **No cost this time.** The risk is
+unchanged: 101 of 465 historical BTC exits fall while gold is shut.
+
+### Findings
+1. **BTC unmanaged while gold is closed.** Open. Fix: `OnTimer`. Not applied.
+2. **EA removed by the VRP start config** (Sep 23 14:23, ~9h unmanaged).
+   Resolved by manual attach, which persists in the chart profile. The watcher
+   now detects EA removal and measures Book B from its own trades.
+3. **22.7h offline over gold's reopen, then one stale decision** (Sep 27-28).
+   Cost nil. The watcher now flags a broker disconnect. EA guard (wait for
+   `SERIES_SYNCHRONIZED`) proposed, not applied. Root cause is the host.
+
+### Recommendations
+- Host the terminal somewhere that does not sleep or drop off Wi-Fi (VPS, or
+  no-sleep settings on this laptop). Two of three findings trace to the host.
+- Approve the two EA fixes as one change: `OnTimer` + history-sync guard,
+  then re-run tester parity before redeploying.
+- Keep running. Judge performance after a quarter, not a week.
