@@ -338,3 +338,24 @@ Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | 
 - parity XAUUSD @ 09-28 16:00: EA == Python
 - parity BTCUSD @ 09-28 16:00: EA == Python
 - no findings
+
+### Tue 2026-09-29 02:39
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,938.22
+- parity XAUUSD @ 09-29 00:00: EA == Python
+- parity BTCUSD @ 09-29 00:00: EA == Python
+- no findings
+
+### Tue 2026-09-29 06:39
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,936.02
+- parity XAUUSD @ 09-29 04:00: EA == Python
+- parity BTCUSD @ 09-29 04:00: EA == Python
+- no findings
+
+### Tue 2026-09-29 09:47
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,938.04
+- parity XAUUSD @ 09-29 04:00: EA == Python
+- parity BTCUSD @ 09-29 04:00: EA == Python
+- no findings
