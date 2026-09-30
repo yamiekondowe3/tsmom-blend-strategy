@@ -435,3 +435,31 @@ unchanged: 101 of 465 historical BTC exits fall while gold is shut.
 - Approve the two EA fixes as one change: `OnTimer` + history-sync guard,
   then re-run tester parity before redeploying.
 - Keep running. Judge performance after a quarter, not a week.
+
+### Tue 2026-09-29 18:39
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,935.56
+- parity XAUUSD @ 09-29 16:00: EA == Python
+- parity BTCUSD @ 09-29 16:00: EA == Python
+- no findings
+
+### Tue 2026-09-29 22:39
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,937.33
+- parity XAUUSD @ 09-29 20:00: EA == Python
+- parity BTCUSD @ 09-29 20:00: EA == Python
+- no findings
+
+### Wed 2026-09-30 02:40
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,938.18
+- parity XAUUSD @ 09-30 00:00: EA == Python
+- parity BTCUSD @ 09-30 00:00: EA == Python
+- no findings
+
+### Wed 2026-09-30 09:47
+Book B equity 9,938.14 (start 10,000.00, -0.62%) | peak 10,000.00 | DD -0.62% | held: flat
+- other positions on the account (not Book B): 1 (US SP 500); account equity 9,938.48
+- parity XAUUSD @ 09-30 04:00: EA == Python
+- parity BTCUSD @ 09-30 04:00: EA == Python
+- no findings
